@@ -1,6 +1,7 @@
 package com.registo.horas_estagio.service.impl;
 
 import com.registo.horas_estagio.dto.request.RegisterRequest;
+import com.registo.horas_estagio.dto.response.PageResponse;
 import com.registo.horas_estagio.dto.response.RegisterResponse;
 import com.registo.horas_estagio.mapper.RequestMapper;
 import com.registo.horas_estagio.models.RegisterHoras;
@@ -11,6 +12,8 @@ import com.registo.horas_estagio.service.RegisterHorasService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +70,29 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<RegisterResponse> findAllRegisteredHours(Pageable pageable) {
+        log.debug("Buscando registros paginados - Página: {}, Tamanho: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<RegisterHoras> page = registroHorasRepository.findAll(pageable);
+        List<RegisterResponse> content = requestMapper.mapToListRegisterResponse(page.getContent());
+
+        log.info("Encontrados {} registros na página {} de {}",
+                page.getNumberOfElements(), page.getNumber(), page.getTotalPages());
+
+        return PageResponse.of(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<RegisterResponse> findAllRegisteredHoursUser(String name) {
         log.debug("Buscando registros para o usuário: {}", name);
 
@@ -75,6 +101,30 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
         log.info("Encontrados {} registros para o usuário: {}", registos.size(), name);
         return requestMapper.mapToListRegisterResponse(registos);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RegisterResponse> findAllRegisteredHoursUser(String name, Pageable pageable) {
+        log.debug("Buscando registros paginados do usuário: {} - Página: {}, Tamanho: {}",
+                name, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<RegisterHoras> page = registroHorasRepository.findByEstagiario(name, pageable);
+        List<RegisterResponse> content = requestMapper.mapToListRegisterResponse(page.getContent());
+
+        log.info("Encontrados {} registros para o usuário {} na página {} de {}",
+                page.getNumberOfElements(), name, page.getNumber(), page.getTotalPages());
+
+        return PageResponse.of(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+
 
     @Override
     @Transactional

@@ -14,12 +14,11 @@ public interface RegisterHorasService {
 
     List<RegisterResponse> findAllRegisteredHours();
 
-    // Novo método com paginação
+
     PageResponse<RegisterResponse> findAllRegisteredHours(Pageable pageable);
 
     List<RegisterResponse> findAllRegisteredHoursUser(String name);
 
-    // Novo método com paginação por usuário
     PageResponse<RegisterResponse> findAllRegisteredHoursUser(String name, Pageable pageable);
 
     void DeleteRegisteredHoursUser(UUID uuid);

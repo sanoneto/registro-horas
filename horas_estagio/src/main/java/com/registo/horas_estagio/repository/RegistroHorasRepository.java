@@ -16,7 +16,6 @@ public interface RegistroHorasRepository extends JpaRepository<RegisterHoras, UU
     List<RegisterHoras> findByEstagiario(@Param("estagiario") String estagiario);
 
 
-    // Novo método com paginação
     Page<RegisterHoras> findByEstagiario(String name, Pageable pageable);
 
 }

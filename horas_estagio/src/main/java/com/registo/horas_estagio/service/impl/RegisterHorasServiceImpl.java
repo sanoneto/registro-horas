@@ -175,12 +175,11 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
     // ==================== MÉTODOS AUXILIARES ====================
     private Usuario getUsuario(String request) {
-        Usuario usuario = usuarioRepository.findByUsername(request)
+        return usuarioRepository.findByUsername(request)
                 .orElseThrow(() -> {
                     log.error("Usuário não encontrado: {}", request);
                     return new RuntimeException("Usuário não encontrado: " + request);
                 });
-        return usuario;
     }
 
     private void updateEstagiario(RegisterHoras registerHoras, String novoEstagiario) {

@@ -65,7 +65,6 @@ public class AuthController {
         log.info("Token gerado: {}", token);
         return ResponseEntity.ok().body(new LoginResponse("Login realizado com sucesso", token));
     }
-
     /**
      * Endpoint para registrar um novo Username.
      */

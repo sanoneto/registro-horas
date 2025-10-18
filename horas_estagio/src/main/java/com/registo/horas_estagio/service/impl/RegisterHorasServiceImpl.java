@@ -72,11 +72,6 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         List<RegisterHoras> registos = registroHorasRepository.findByEstagiario(name);
 
-        if (registos.isEmpty()) {
-            log.warn("Nenhum registro encontrado para o usuário: {}", name);
-            throw new RuntimeException("Nenhum registro encontrado para: " + name);
-        }
-
         log.info("Encontrados {} registros para o usuário: {}", registos.size(), name);
         return requestMapper.mapToListRegisterResponse(registos);
     }

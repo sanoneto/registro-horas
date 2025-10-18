@@ -68,7 +68,7 @@ public class RegistroHorasController {
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     @PostMapping("/add")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ESTAGIARIO')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('ESTAGIARIO') and #registerRequest.estagiario() == authentication.name)")
     public ResponseEntity<RegisterResponse> addRegisterHoras(@RequestBody @Valid RegisterRequest registerRequest) {
        RegisterResponse registerResponse= registerHorasService.submitHours(registerRequest);
         return new ResponseEntity<>(registerResponse, HttpStatus.CREATED);

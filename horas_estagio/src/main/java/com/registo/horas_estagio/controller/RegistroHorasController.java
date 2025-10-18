@@ -27,7 +27,7 @@ public class RegistroHorasController {
     private final RegisterHorasService registerHorasService;
 
     @Operation(
-            summary = "Listar todos os registros",
+            summary = "Listar todos os registos",
             description = "Retorna todos os registros de horas (apenas ADMIN)"
     )
     @ApiResponses(value = {
@@ -40,7 +40,7 @@ public class RegistroHorasController {
         return ResponseEntity.ok(registerHorasService.findAllRegisteredHours());
     }
     @Operation(
-            summary = "Listar registros por usuário",
+            summary = "Listar registos por usuário",
             description = "Retorna os registros de um usuário específico (ADMIN vê todos, ESTAGIARIO vê apenas os seus)"
     )
     @ApiResponses(value = {
@@ -55,7 +55,7 @@ public class RegistroHorasController {
     }
 
     @Operation(
-            summary = "Criar novo registro",
+            summary = "Criar novo registo",
             description = "Cria um novo registro de horas de estágio"
     )
     @ApiResponses(value = {
@@ -74,7 +74,7 @@ public class RegistroHorasController {
         return new ResponseEntity<>(registerResponse, HttpStatus.CREATED);
     }
     @Operation(
-            summary = "Atualizar registro",
+            summary = "Atualizar registo",
             description = "Atualiza um registro existente (ADMIN pode editar qualquer, ESTAGIARIO apenas os seus)"
     )
     @ApiResponses(value = {
@@ -93,7 +93,7 @@ public class RegistroHorasController {
         return ResponseEntity.ok(response);
     }
     @Operation(
-            summary = "Deletar registro",
+            summary = "Apgagar registro",
             description = "Remove um registro de horas (apenas ADMIN)"
     )
     @ApiResponses(value = {

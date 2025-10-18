@@ -1,6 +1,7 @@
 package com.registo.horas_estagio.service.impl;
 
 import com.registo.horas_estagio.dto.request.RegisterRequest;
+import com.registo.horas_estagio.dto.response.PageResponse;
 import com.registo.horas_estagio.dto.response.RegisterResponse;
 import com.registo.horas_estagio.mapper.RequestMapper;
 import com.registo.horas_estagio.models.RegisterHoras;
@@ -11,13 +12,13 @@ import com.registo.horas_estagio.service.RegisterHorasService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,11 +38,7 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         RegisterHoras registerHoras = requestMapper.mapToRegisterHoras(request);
         // Busca e associa o usuário
-        Usuario usuario = usuarioRepository.findByUsername(request.estagiario())
-                .orElseThrow(() -> {
-                    log.error("Usuário não encontrado: {}", request.estagiario());
-                    return new RuntimeException("Usuário não encontrado: " + request.estagiario());
-                });
+        Usuario usuario = getUsuario(request.estagiario());
         registerHoras.setUsuario(usuario);
 
         // Calcula horas automaticamente se não fornecido
@@ -67,19 +64,61 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<RegisterResponse> findAllRegisteredHours(Pageable pageable) {
+        log.debug("Buscando registros paginados - Página: {}, Tamanho: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<RegisterHoras> page = registroHorasRepository.findAll(pageable);
+        List<RegisterResponse> content = requestMapper.mapToListRegisterResponse(page.getContent());
+
+        log.info("Encontrados {} registros na página {} de {}",
+                page.getNumberOfElements(), page.getNumber(), page.getTotalPages());
+
+        return PageResponse.of(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<RegisterResponse> findAllRegisteredHoursUser(String name) {
         log.debug("Buscando registros para o usuário: {}", name);
 
         List<RegisterHoras> registos = registroHorasRepository.findByEstagiario(name);
 
-        if (registos.isEmpty()) {
-            log.warn("Nenhum registro encontrado para o usuário: {}", name);
-            throw new RuntimeException("Nenhum registro encontrado para: " + name);
-        }
-
         log.info("Encontrados {} registros para o usuário: {}", registos.size(), name);
         return requestMapper.mapToListRegisterResponse(registos);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RegisterResponse> findAllRegisteredHoursUser(String name, Pageable pageable) {
+        log.debug("Buscando registros paginados do usuário: {} - Página: {}, Tamanho: {}",
+                name, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<RegisterHoras> page = registroHorasRepository.findByEstagiario(name, pageable);
+        List<RegisterResponse> content = requestMapper.mapToListRegisterResponse(page.getContent());
+
+        log.info("Encontrados {} registros para o usuário {} na página {} de {}",
+                page.getNumberOfElements(), name, page.getNumber(), page.getTotalPages());
+
+        return PageResponse.of(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+
 
     @Override
     @Transactional
@@ -135,13 +174,16 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
+    private Usuario getUsuario(String request) {
+        return usuarioRepository.findByUsername(request)
+                .orElseThrow(() -> {
+                    log.error("Usuário não encontrado: {}", request);
+                    return new RuntimeException("Usuário não encontrado: " + request);
+                });
+    }
 
     private void updateEstagiario(RegisterHoras registerHoras, String novoEstagiario) {
-        Usuario usuario = usuarioRepository.findByUsername(novoEstagiario)
-                .orElseThrow(() -> {
-                    log.error("Usuário não encontrado: {}", novoEstagiario);
-                    return new RuntimeException("Usuário não encontrado: " + novoEstagiario);
-                });
+        Usuario usuario = getUsuario(novoEstagiario);
 
         registerHoras.setEstagiario(novoEstagiario);
         registerHoras.setUsuario(usuario);

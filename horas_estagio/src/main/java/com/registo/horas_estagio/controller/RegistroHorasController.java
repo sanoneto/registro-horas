@@ -2,15 +2,20 @@ package com.registo.horas_estagio.controller;
 
 
 import com.registo.horas_estagio.dto.request.RegisterRequest;
+import com.registo.horas_estagio.dto.response.PageResponse;
 import com.registo.horas_estagio.dto.response.RegisterResponse;
 import com.registo.horas_estagio.service.RegisterHorasService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/registros")
+@RequestMapping("/api/registos")
 @RequiredArgsConstructor
 public class RegistroHorasController {
 
@@ -39,6 +44,32 @@ public class RegistroHorasController {
     public ResponseEntity<List<RegisterResponse>> getAllRegisterHoras() {
         return ResponseEntity.ok(registerHorasService.findAllRegisteredHours());
     }
+
+    @GetMapping("/list/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<RegisterResponse>> getAllRegisterHorasPaginated(
+            @Parameter(description = "Número da página (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Tamanho da página", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Campo para ordenação", example = "dataInicio")
+            @RequestParam(defaultValue = "dataInicio") String sortBy,
+
+            @Parameter(description = "Direção da ordenação (ASC ou DESC)", example = "DESC")
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        PageResponse<RegisterResponse> response = registerHorasService.findAllRegisteredHours(pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(
             summary = "Listar registos por usuário",
             description = "Retorna os registros de um usuário específico (ADMIN vê todos, ESTAGIARIO vê apenas os seus)"
@@ -55,6 +86,42 @@ public class RegistroHorasController {
     }
 
     @Operation(
+            summary = "Listar registos por usuário com paginação",
+            description = "Retorna os registros paginados de um usuário específico"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página retornada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Nenhum registro encontrado")
+    })
+    @GetMapping("/list/{name}/paginated")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('ESTAGIARIO') and #name == authentication.name)")
+    public ResponseEntity<PageResponse<RegisterResponse>> getAllRegisterHorasUserPaginated(
+            @PathVariable String name,
+
+            @Parameter(description = "Número da página (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Tamanho da página", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Campo para ordenação", example = "dataInicio")
+            @RequestParam(defaultValue = "dataInicio") String sortBy,
+
+            @Parameter(description = "Direção da ordenação (ASC ou DESC)", example = "DESC")
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        PageResponse<RegisterResponse> response = registerHorasService.findAllRegisteredHoursUser(name, pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
             summary = "Criar novo registo",
             description = "Cria um novo registro de horas de estágio"
     )
@@ -68,7 +135,7 @@ public class RegistroHorasController {
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     @PostMapping("/add")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ESTAGIARIO')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('ESTAGIARIO') and #registerRequest.estagiario() == authentication.name)")
     public ResponseEntity<RegisterResponse> addRegisterHoras(@RequestBody @Valid RegisterRequest registerRequest) {
        RegisterResponse registerResponse= registerHorasService.submitHours(registerRequest);
         return new ResponseEntity<>(registerResponse, HttpStatus.CREATED);

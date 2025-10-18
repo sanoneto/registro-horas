@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Schema(description = "Request para registrar horas")
 public record RegisterRequest(
 
-        @NotBlank(message = "O o nome estagiario é obrigatório")
+        @NotBlank(message = "O  nome estagiario é obrigatório")
         @Size(min = 2, max = 50, message = "Nome deve ter entre 2 e 50 caracteres")
         @Pattern(regexp = "^[A-Za-zÀ-ÿ\\s]+$", message = "Nome deve conter apenas letras")
         String estagiario,
@@ -47,7 +47,7 @@ public record RegisterRequest(
                 description = "Data e hora trabalhadas",
                 example = "4",
                 required = true,
-                type = "string"
+                type = "int"
         )
         int horasTrabalhadas
 

@@ -83,7 +83,7 @@ public class AuthController {
         }
         Usuario usuario = requestMapper.mapToRegisterHoras(userCredentialsRequest);
         usuarioService.registrarUsuario(usuario);
-        return ResponseEntity.ok("Username registrado com sucesso!");
+        return ResponseEntity.ok(usuario.getUsername() + " registrado com sucesso!");
     }
 
 }

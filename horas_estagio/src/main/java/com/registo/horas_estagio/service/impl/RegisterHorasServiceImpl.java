@@ -38,11 +38,7 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         RegisterHoras registerHoras = requestMapper.mapToRegisterHoras(request);
         // Busca e associa o usuário
-        Usuario usuario = usuarioRepository.findByUsername(request.estagiario())
-                .orElseThrow(() -> {
-                    log.error("Usuário não encontrado: {}", request.estagiario());
-                    return new RuntimeException("Usuário não encontrado: " + request.estagiario());
-                });
+        Usuario usuario = getUsuario(request.estagiario());
         registerHoras.setUsuario(usuario);
 
         // Calcula horas automaticamente se não fornecido
@@ -178,13 +174,17 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
+    private Usuario getUsuario(String request) {
+        Usuario usuario = usuarioRepository.findByUsername(request)
+                .orElseThrow(() -> {
+                    log.error("Usuário não encontrado: {}", request);
+                    return new RuntimeException("Usuário não encontrado: " + request);
+                });
+        return usuario;
+    }
 
     private void updateEstagiario(RegisterHoras registerHoras, String novoEstagiario) {
-        Usuario usuario = usuarioRepository.findByUsername(novoEstagiario)
-                .orElseThrow(() -> {
-                    log.error("Usuário não encontrado: {}", novoEstagiario);
-                    return new RuntimeException("Usuário não encontrado: " + novoEstagiario);
-                });
+        Usuario usuario = getUsuario(novoEstagiario);
 
         registerHoras.setEstagiario(novoEstagiario);
         registerHoras.setUsuario(usuario);

@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/registros")
+@RequestMapping("/api/registos")
 @RequiredArgsConstructor
 public class RegistroHorasController {
 

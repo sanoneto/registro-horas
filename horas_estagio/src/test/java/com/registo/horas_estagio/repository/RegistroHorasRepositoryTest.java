@@ -243,7 +243,8 @@ class RegistroHorasRepositoryTest {
     void shouldUpdateExistingRegister() {
         // Given
         RegisterHoras registroExistente = registroHorasRepository
-                .findById(registro1.getId()).get();
+                .findById(registro1.getId())
+                .orElseThrow(() -> new AssertionError("Registro deveria existir"));
         registroExistente.setDescricao("Desenvolvimento de API REST - Atualizado");
         registroExistente.setHorasTrabalhadas(10);
 
@@ -380,7 +381,7 @@ class RegistroHorasRepositoryTest {
 
         // Then
         assertThat(registros).isNotEmpty();
-        assertThat(registros.get(0).getDataInicio()).isNotNull();
+        assertThat(registros.getFirst().getDataInicio()).isNotNull();
     }
 
     @Test

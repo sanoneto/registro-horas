@@ -537,7 +537,7 @@ class UsuarioRepositoryTest {
         Usuario found = usuarioRepository.findById(saved.getId()).orElseThrow();
         assertThat(found.getRegistros()).isNotEmpty();
         assertThat(found.getRegistros()).hasSize(1);
-        assertThat(found.getRegistros().get(0).getDescricao()).isEqualTo("Teste");
+        assertThat(found.getRegistros().getFirst().getDescricao()).isEqualTo("Teste");
     }
 
     @Test

@@ -1,14 +1,12 @@
 package com.registo.horas_estagio.models;
 
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import jakarta.persistence.*;
 
 
 @Data

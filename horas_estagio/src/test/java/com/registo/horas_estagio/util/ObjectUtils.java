@@ -57,15 +57,5 @@ public class ObjectUtils {
                 .usuario(usuario)
                 .build();
     }
-
-    // Métodos para criar objetos customizados
-    public static RegisterRequest createRequest(String estagiario, Integer horas) {
-        return new RegisterRequest(
-                estagiario,
-                DESCRICAO_PADRAO,
-                DATA_INICIO_PADRAO,
-                DATA_FIM_PADRAO,
-                horas
-        );
-    }
+    
 }

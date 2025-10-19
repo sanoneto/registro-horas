@@ -140,7 +140,8 @@ class UsuarioRepositoryTest {
     @DisplayName("Deve atualizar usuário existente")
     void shouldUpdateUsuario() {
         // Given
-        Usuario usuarioExistente = usuarioRepository.findByUsername("neto").get();
+        Usuario usuarioExistente = usuarioRepository.findByUsername("neto")
+                .orElseThrow(() -> new AssertionError("Usuário deveria existir"));
         usuarioExistente.setPassword("novaSenha456");
         usuarioExistente.setRole("ROLE_ADMIN");
 

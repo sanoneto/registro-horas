@@ -142,7 +142,7 @@ class RegisterHorasServiceTest {
         // Then
         assertThat(result).isNotEmpty();
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).estagiario()).isEqualTo("neto");
+        assertThat(result.getFirst().estagiario()).isEqualTo("neto");
 
         verify(registroHorasRepository).findAll();
     }
@@ -189,7 +189,7 @@ class RegisterHorasServiceTest {
         // Then
         assertThat(result).isNotEmpty();
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).estagiario()).isEqualTo("neto");
+        assertThat(result.getFirst().estagiario()).isEqualTo("neto");
 
         verify(registroHorasRepository).findByEstagiario("neto");
     }

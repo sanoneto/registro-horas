@@ -304,7 +304,7 @@ class RegistroHorasRepositoryTest {
 
         List<RegisterHoras> all = registroHorasRepository.findAll();
         assertThat(all).hasSize(1);
-        assertThat(all.get(0).getEstagiario()).isEqualTo("joao");
+        assertThat(all.getFirst().getEstagiario()).isEqualTo("joao");
     }
 
     @Test

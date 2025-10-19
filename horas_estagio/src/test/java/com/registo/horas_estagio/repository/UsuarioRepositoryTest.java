@@ -1,0 +1,269 @@
+package com.registo.horas_estagio.repository;
+
+import com.registo.horas_estagio.models.Usuario;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@DataJpaTest
+@ActiveProfiles("test")
+@DisplayName("Testes do UsuarioRepository")
+class UsuarioRepositoryTest {
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    private Usuario usuario1;
+    private Usuario usuario2;
+
+    @BeforeEach
+    void setUp() {
+        // Limpar dados existentes
+        usuarioRepository.deleteAll();
+        entityManager.flush();
+        entityManager.clear();
+
+        // Criar usuários de teste
+        usuario1 = Usuario.builder()
+                .username("neto")
+                .password("senha123")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        usuario2 = Usuario.builder()
+                .username("admin")
+                .password("admin123")
+                .role("ROLE_ADMIN")
+                .build();
+
+        usuarioRepository.saveAll(List.of(usuario1, usuario2));
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    @Test
+    @DisplayName("Deve salvar usuário com sucesso")
+    void shouldSaveUsuario() {
+        // Given
+        Usuario novoUsuario = Usuario.builder()
+                .username("maria")
+                .password("maria123")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When
+        Usuario saved = usuarioRepository.save(novoUsuario);
+
+        // Then
+        assertThat(saved).isNotNull();
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getUsername()).isEqualTo("maria");
+        assertThat(saved.getPassword()).isEqualTo("maria123");
+        assertThat(saved.getRole()).isEqualTo("ROLE_ESTAGIARIO");
+    }
+
+    @Test
+    @DisplayName("Deve buscar usuário por ID")
+    void shouldFindUsuarioById() {
+        // When
+        Optional<Usuario> found = usuarioRepository.findById(usuario1.getId());
+
+        // Then
+        assertThat(found).isPresent();
+        assertThat(found.get().getUsername()).isEqualTo("neto");
+    }
+
+    @Test
+    @DisplayName("Deve retornar vazio quando ID não existe")
+    void shouldReturnEmptyWhenIdNotFound() {
+        // Given
+        UUID idInexistente = UUID.randomUUID();
+
+        // When
+        Optional<Usuario> found = usuarioRepository.findById(idInexistente);
+
+        // Then
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Deve buscar usuário por username")
+    void shouldFindByUsername() {
+        // When
+        Optional<Usuario> found = usuarioRepository.findByUsername("neto");
+
+        // Then
+        assertThat(found).isPresent();
+        assertThat(found.get().getUsername()).isEqualTo("neto");
+        assertThat(found.get().getRole()).isEqualTo("ROLE_ESTAGIARIO");
+    }
+
+    @Test
+    @DisplayName("Deve retornar vazio quando username não existe")
+    void shouldReturnEmptyWhenUsernameNotFound() {
+        // When
+        Optional<Usuario> found = usuarioRepository.findByUsername("inexistente");
+
+        // Then
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Deve buscar todos os usuários")
+    void shouldFindAllUsuarios() {
+        // When
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+        // Then
+        assertThat(usuarios).isNotEmpty();
+        assertThat(usuarios).hasSize(2);
+        assertThat(usuarios).extracting(Usuario::getUsername)
+                .containsExactlyInAnyOrder("neto", "admin");
+    }
+
+    @Test
+    @DisplayName("Deve atualizar usuário existente")
+    void shouldUpdateUsuario() {
+        // Given
+        Usuario usuarioExistente = usuarioRepository.findByUsername("neto").get();
+        usuarioExistente.setPassword("novaSenha456");
+        usuarioExistente.setRole("ROLE_ADMIN");
+
+        // When
+        Usuario updated = usuarioRepository.save(usuarioExistente);
+
+        // Then
+        assertThat(updated.getId()).isEqualTo(usuario1.getId());
+        assertThat(updated.getUsername()).isEqualTo("neto");
+        assertThat(updated.getPassword()).isEqualTo("novaSenha456");
+        assertThat(updated.getRole()).isEqualTo("ROLE_ADMIN");
+    }
+
+    @Test
+    @DisplayName("Deve deletar usuário por ID")
+    void shouldDeleteUsuarioById() {
+        // Given
+        UUID idParaDeletar = usuario1.getId();
+
+        // When
+        usuarioRepository.deleteById(idParaDeletar);
+
+        // Then
+        Optional<Usuario> deleted = usuarioRepository.findById(idParaDeletar);
+        assertThat(deleted).isEmpty();
+
+        List<Usuario> remaining = usuarioRepository.findAll();
+        assertThat(remaining).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Deve deletar usuário por entidade")
+    void shouldDeleteUsuarioByEntity() {
+        // When
+        usuarioRepository.delete(usuario2);
+
+        // Then
+        Optional<Usuario> deleted = usuarioRepository.findByUsername("admin");
+        assertThat(deleted).isEmpty();
+
+        List<Usuario> remaining = usuarioRepository.findAll();
+        assertThat(remaining).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Deve contar total de usuários")
+    void shouldCountTotalUsuarios() {
+        // When
+        long count = usuarioRepository.count();
+
+        // Then
+        assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Deve verificar se usuário existe por ID")
+    void shouldCheckIfUsuarioExistsById() {
+        // When
+        boolean exists = usuarioRepository.existsById(usuario1.getId());
+        boolean notExists = usuarioRepository.existsById(UUID.randomUUID());
+
+        // Then
+        assertThat(exists).isTrue();
+        assertThat(notExists).isFalse();
+    }
+
+    @Test
+    @DisplayName("Não deve permitir username duplicado")
+    void shouldNotAllowDuplicateUsername() {
+        // Given
+        Usuario usuarioDuplicado = Usuario.builder()
+                .username("neto")  // Username já existe
+                .password("outraSenha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When & Then
+        assertThatThrownBy(() -> {
+            usuarioRepository.save(usuarioDuplicado);
+            entityManager.flush();
+        }).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("Deve permitir usuários com usernames diferentes")
+    void shouldAllowDifferentUsernames() {
+        // Given
+        Usuario usuario3 = Usuario.builder()
+                .username("joao")
+                .password("senha789")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        Usuario usuario4 = Usuario.builder()
+                .username("pedro")
+                .password("senha101")
+                .role("ROLE_ADMIN")
+                .build();
+
+        // When
+        usuarioRepository.saveAll(List.of(usuario3, usuario4));
+
+        // Then
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        assertThat(usuarios).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("Username deve ser case-sensitive")
+    void usernameShouldBeCaseSensitive() {
+        // Given
+        Usuario usuarioMaiusculo = Usuario.builder()
+                .username("NETO")  // Maiúsculo
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When
+        Usuario saved = usuarioRepository.save(usuarioMaiusculo);
+
+        // Then
+        assertThat(usuarioRepository.findByUsername("NETO")).isPresent();
+        assertThat(usuarioRepository.findByUsername("neto")).isPresent();
+        assertThat(saved.getUsername()).isEqualTo("NETO");
+    }
+}

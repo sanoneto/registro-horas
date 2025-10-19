@@ -1,19 +1,16 @@
 package com.registo.horas_estagio.security;
 
 
-
-import java.util.Date;
-
-import com.registo.horas_estagio.controller.AuthController;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 @Component
 public class JwtTokenUtil {
@@ -29,7 +26,7 @@ public class JwtTokenUtil {
     }
 
 
-    public String generateToken(String username ) {
+    public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())

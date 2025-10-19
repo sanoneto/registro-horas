@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -219,10 +220,8 @@ class UsuarioRepositoryTest {
                 .build();
 
         // When & Then
-        assertThatThrownBy(() -> {
-            usuarioRepository.save(usuarioDuplicado);
-            entityManager.flush();
-        }).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> usuarioRepository.saveAndFlush(usuarioDuplicado))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -266,5 +265,261 @@ class UsuarioRepositoryTest {
         assertThat(usuarioRepository.findByUsername("NETO")).isPresent();
         assertThat(usuarioRepository.findByUsername("neto")).isPresent();
         assertThat(saved.getUsername()).isEqualTo("NETO");
+    }
+
+    @Test
+    @DisplayName("Deve deletar todos os usuários")
+    void shouldDeleteAllUsuarios() {
+        // When
+        usuarioRepository.deleteAll();
+
+        // Then
+        assertThat(usuarioRepository.count()).isZero();
+        assertThat(usuarioRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Deve verificar se username existe")
+    void shouldCheckIfUsernameExists() {
+        // When
+        boolean existsNeto = usuarioRepository.findByUsername("neto").isPresent();
+        boolean existsInexistente = usuarioRepository.findByUsername("inexistente").isPresent();
+
+        // Then
+        assertThat(existsNeto).isTrue();
+        assertThat(existsInexistente).isFalse();
+    }
+
+    @Test
+    @DisplayName("Deve salvar usuário com lista de registros vazia")
+    void shouldSaveUsuarioWithEmptyRegistrosList() {
+        // Given
+        Usuario usuario = Usuario.builder()
+                .username("carlos")
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .registros(new ArrayList<>())
+                .build();
+
+        // When
+        Usuario saved = usuarioRepository.save(usuario);
+
+        // Then
+        assertThat(saved.getRegistros()).isNotNull();
+        assertThat(saved.getRegistros()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Deve manter integridade ao deletar em lote")
+    void shouldMaintainIntegrityWhenBatchDeleting() {
+        // Given
+        List<Usuario> usuariosParaDeletar = List.of(usuario1);
+
+        // When
+        usuarioRepository.deleteAll(usuariosParaDeletar);
+        entityManager.flush();
+
+        // Then
+        assertThat(usuarioRepository.count()).isEqualTo(1);
+        assertThat(usuarioRepository.findByUsername("neto")).isEmpty();
+        assertThat(usuarioRepository.findByUsername("admin")).isPresent();
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há usuários")
+    void shouldReturnEmptyListWhenNoUsuarios() {
+        // Given
+        usuarioRepository.deleteAll();
+        entityManager.flush();
+
+        // When
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+        // Then
+        assertThat(usuarios).isEmpty();
+        assertThat(usuarioRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("Deve salvar e recuperar usuário com caracteres especiais no username")
+    void shouldSaveAndRetrieveUsuarioWithSpecialCharactersInUsername() {
+        // Given
+        Usuario usuario = Usuario.builder()
+                .username("user.name_123-test")
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When
+        Usuario saved = usuarioRepository.save(usuario);
+        Optional<Usuario> found = usuarioRepository.findByUsername("user.name_123-test");
+
+        // Then
+        assertThat(saved.getUsername()).isEqualTo("user.name_123-test");
+        assertThat(found).isPresent();
+        assertThat(found.get().getUsername()).isEqualTo("user.name_123-test");
+    }
+
+    @Test
+    @DisplayName("Não deve permitir salvar usuário sem username")
+    void shouldNotAllowSavingUsuarioWithoutUsername() {
+        // Given
+        Usuario usuarioSemUsername = Usuario.builder()
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When & Then
+        assertThatThrownBy(() -> {
+            usuarioRepository.save(usuarioSemUsername);
+            entityManager.flush();
+        }).isInstanceOf(Exception.class); // Pode ser DataIntegrityViolationException ou ConstraintViolationException
+    }
+
+    @Test
+    @DisplayName("Não deve permitir salvar usuário sem password")
+    void shouldNotAllowSavingUsuarioWithoutPassword() {
+        // Given
+        Usuario usuarioSemPassword = Usuario.builder()
+                .username("sempassword")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When & Then
+        assertThatThrownBy(() -> {
+            usuarioRepository.save(usuarioSemPassword);
+            entityManager.flush();
+        }).isInstanceOf(Exception.class);
+    }
+
+    @Test
+    @DisplayName("Não deve permitir salvar usuário sem role")
+    void shouldNotAllowSavingUsuarioWithoutRole() {
+        // Given
+        Usuario usuarioSemRole = Usuario.builder()
+                .username("semrole")
+                .password("senha")
+                .build();
+
+        // When & Then
+        assertThatThrownBy(() -> {
+            usuarioRepository.save(usuarioSemRole);
+            entityManager.flush();
+        }).isInstanceOf(Exception.class);
+    }
+
+    @Test
+    @DisplayName("Deve atualizar apenas a senha do usuário")
+    void shouldUpdateOnlyPassword() {
+        // Given
+        Usuario usuario = usuarioRepository.findByUsername("neto")
+                .orElseThrow(() -> new AssertionError("Usuário deveria existir"));
+        String senhaOriginal = usuario.getPassword();
+        String roleOriginal = usuario.getRole();
+
+        // When
+        usuario.setPassword("novaSenha999");
+        Usuario updated = usuarioRepository.save(usuario);
+
+        // Then
+        assertThat(updated.getPassword()).isEqualTo("novaSenha999");
+        assertThat(updated.getPassword()).isNotEqualTo(senhaOriginal);
+        assertThat(updated.getRole()).isEqualTo(roleOriginal);
+        assertThat(updated.getUsername()).isEqualTo("neto");
+    }
+
+    @Test
+    @DisplayName("Deve atualizar apenas a role do usuário")
+    void shouldUpdateOnlyRole() {
+        // Given
+        Usuario usuario = usuarioRepository.findByUsername("neto")
+                .orElseThrow(() -> new AssertionError("Usuário deveria existir"));
+        String senhaOriginal = usuario.getPassword();
+
+        // When
+        usuario.setRole("ROLE_MANAGER");
+        Usuario updated = usuarioRepository.save(usuario);
+
+        // Then
+        assertThat(updated.getRole()).isEqualTo("ROLE_MANAGER");
+        assertThat(updated.getPassword()).isEqualTo(senhaOriginal);
+        assertThat(updated.getUsername()).isEqualTo("neto");
+    }
+
+    @Test
+    @DisplayName("Deve buscar múltiplos usuários e validar todos os campos")
+    void shouldFindMultipleUsuariosAndValidateAllFields() {
+        // When
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+        // Then
+        assertThat(usuarios).hasSize(2);
+
+        Usuario neto = usuarios.stream()
+                .filter(u -> u.getUsername().equals("neto"))
+                .findFirst()
+                .orElseThrow();
+
+        Usuario admin = usuarios.stream()
+                .filter(u -> u.getUsername().equals("admin"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(neto.getId()).isNotNull();
+        assertThat(neto.getPassword()).isEqualTo("senha123");
+        assertThat(neto.getRole()).isEqualTo("ROLE_ESTAGIARIO");
+
+        assertThat(admin.getId()).isNotNull();
+        assertThat(admin.getPassword()).isEqualTo("admin123");
+        assertThat(admin.getRole()).isEqualTo("ROLE_ADMIN");
+    }
+
+    @Test
+    @DisplayName("Deve verificar que IDs são únicos e gerados automaticamente")
+    void shouldVerifyIdsAreUniqueAndAutoGenerated() {
+        // Given
+        Usuario usuario3 = Usuario.builder()
+                .username("teste1")
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        Usuario usuario4 = Usuario.builder()
+                .username("teste2")
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When
+        Usuario saved1 = usuarioRepository.save(usuario3);
+        Usuario saved2 = usuarioRepository.save(usuario4);
+
+        // Then
+        assertThat(saved1.getId()).isNotNull();
+        assertThat(saved2.getId()).isNotNull();
+        assertThat(saved1.getId()).isNotEqualTo(saved2.getId());
+    }
+
+    @Test
+    @DisplayName("Deve manter consistência após flush e clear")
+    void shouldMaintainConsistencyAfterFlushAndClear() {
+        // Given
+        String username = "consistencia";
+        Usuario usuario = Usuario.builder()
+                .username(username)
+                .password("senha")
+                .role("ROLE_ESTAGIARIO")
+                .build();
+
+        // When
+        usuarioRepository.save(usuario);
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<Usuario> found = usuarioRepository.findByUsername(username);
+
+        // Then
+        assertThat(found).isPresent();
+        assertThat(found.get().getUsername()).isEqualTo(username);
     }
 }

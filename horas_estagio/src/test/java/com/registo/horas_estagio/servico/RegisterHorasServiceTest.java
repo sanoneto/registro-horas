@@ -245,6 +245,9 @@ class RegisterHorasServiceTest {
         verify(registroHorasRepository).delete(registerHoras);
     }
 
+
+// ... existing code ...
+
     @Test
     @DisplayName("Deve lançar exceção ao deletar registro inexistente")
     void shouldThrowExceptionWhenDeletingNonExistentRegister() {
@@ -259,5 +262,381 @@ class RegisterHorasServiceTest {
 
         verify(registroHorasRepository).findById(uuid);
         verify(registroHorasRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Deve buscar registros paginados por usuário")
+    void shouldFindRegisteredHoursByUserPaginated() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<RegisterHoras> page = new PageImpl<>(List.of(registerHoras), pageable, 1);
+
+        when(registroHorasRepository.findByEstagiario("neto", pageable)).thenReturn(page);
+        when(requestMapper.mapToListRegisterResponse(anyList()))
+                .thenReturn(List.of(registerResponse));
+
+        // When
+        PageResponse<RegisterResponse> result =
+                registerHorasService.findAllRegisteredHoursUser("neto", pageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.first()).isTrue();
+        assertThat(result.last()).isTrue();
+
+        verify(registroHorasRepository).findByEstagiario("neto", pageable);
+    }
+
+    @Test
+    @DisplayName("Deve calcular horas quando horas trabalhadas é zero")
+    void shouldCalculateHoursWhenHoursIsZero() {
+        // Given
+        RegisterRequest requestComZeroHoras = new RegisterRequest(
+                "neto",
+                "Desenvolvimento",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 17, 0),
+                0
+        );
+
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(requestMapper.mapToRegisterHoras(requestComZeroHoras)).thenReturn(registerHoras);
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.submitHours(requestComZeroHoras);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 8));
+    }
+
+    @Test
+    @DisplayName("Deve calcular horas quando horas trabalhadas é negativo")
+    void shouldCalculateHoursWhenHoursIsNegative() {
+        // Given
+        RegisterRequest requestComHorasNegativas = new RegisterRequest(
+                "neto",
+                "Desenvolvimento",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 18, 0),
+                -1
+        );
+
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(requestMapper.mapToRegisterHoras(requestComHorasNegativas)).thenReturn(registerHoras);
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.submitHours(requestComHorasNegativas);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 9));
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando data fim é anterior à data início")
+    void shouldThrowExceptionWhenEndDateIsBeforeStartDate() {
+        // Given
+        RegisterRequest requestComDatasInvalidas = new RegisterRequest(
+                "neto",
+                "Desenvolvimento",
+                LocalDateTime.of(2024, 1, 15, 18, 0),
+                LocalDateTime.of(2024, 1, 15, 9, 0), // Data fim antes da data início
+                0
+        );
+
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(requestMapper.mapToRegisterHoras(requestComDatasInvalidas)).thenReturn(registerHoras);
+
+        // When & Then
+        assertThatThrownBy(() -> registerHorasService.submitHours(requestComDatasInvalidas))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Data fim não pode ser anterior à data início");
+
+        verify(registroHorasRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve usar horas fornecidas quando maior que zero")
+    void shouldUseProvidedHoursWhenGreaterThanZero() {
+        // Given
+        RegisterRequest requestComHorasFornecidas = new RegisterRequest(
+                "neto",
+                "Desenvolvimento",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 18, 0),
+                8 // Horas fornecidas
+        );
+
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(requestMapper.mapToRegisterHoras(requestComHorasFornecidas)).thenReturn(registerHoras);
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.submitHours(requestComHorasFornecidas);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 8));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar registro alterando o estagiário")
+    void shouldUpdateRegisterChangingEstagiario() {
+        // Given
+        UUID uuid = UUID.randomUUID();
+        Usuario novoUsuario = Usuario.builder()
+                .id(UUID.randomUUID())
+                .username("admin")
+                .password("senha")
+                .role("ROLE_ADMIN")
+                .build();
+
+        RegisterRequest requestComNovoEstagiario = new RegisterRequest(
+                "admin", // Estagiário diferente
+                "Nova descrição",
+                LocalDateTime.of(2024, 1, 16, 9, 0),
+                LocalDateTime.of(2024, 1, 16, 17, 0),
+                8
+        );
+
+        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(novoUsuario));
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.updateRegister(uuid, requestComNovoEstagiario);
+
+        // Then
+        verify(usuarioRepository).findByUsername("admin");
+        verify(registroHorasRepository).save(argThat(reg ->
+                reg.getEstagiario().equals("admin") &&
+                        reg.getUsuario().equals(novoUsuario)
+        ));
+    }
+
+    @Test
+    @DisplayName("Deve recalcular horas ao atualizar com horas zero")
+    void shouldRecalculateHoursWhenUpdatingWithZeroHours() {
+        // Given
+        UUID uuid = UUID.randomUUID();
+        RegisterRequest requestComZeroHoras = new RegisterRequest(
+                "neto",
+                "Descrição atualizada",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 14, 0),
+                0 // Força recálculo
+        );
+
+        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.updateRegister(uuid, requestComZeroHoras);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 5));
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há registros")
+    void shouldReturnEmptyListWhenNoRegisters() {
+        // Given
+        when(registroHorasRepository.findAll()).thenReturn(List.of());
+        when(requestMapper.mapToListRegisterResponse(anyList())).thenReturn(List.of());
+
+        // When
+        List<RegisterResponse> result = registerHorasService.findAllRegisteredHours();
+
+        // Then
+        assertThat(result).isEmpty();
+        verify(registroHorasRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando usuário não tem registros")
+    void shouldReturnEmptyListWhenUserHasNoRegisters() {
+        // Given
+        when(registroHorasRepository.findByEstagiario("inexistente")).thenReturn(List.of());
+        when(requestMapper.mapToListRegisterResponse(anyList())).thenReturn(List.of());
+
+        // When
+        List<RegisterResponse> result = registerHorasService.findAllRegisteredHoursUser("inexistente");
+
+        // Then
+        assertThat(result).isEmpty();
+        verify(registroHorasRepository).findByEstagiario("inexistente");
+    }
+
+    @Test
+    @DisplayName("Deve retornar página vazia quando não há registros")
+    void shouldReturnEmptyPageWhenNoRegisters() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<RegisterHoras> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(registroHorasRepository.findAll(pageable)).thenReturn(emptyPage);
+        when(requestMapper.mapToListRegisterResponse(anyList())).thenReturn(List.of());
+
+        // When
+        PageResponse<RegisterResponse> result = registerHorasService.findAllRegisteredHours(pageable);
+
+        // Then
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+        assertThat(result.totalPages()).isZero();
+        assertThat(result.first()).isTrue();
+        assertThat(result.last()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Deve calcular corretamente horas maiores que 24")
+    void shouldCalculateHoursGreaterThan24Correctly() {
+        // Given
+        RegisterRequest requestComMuitasHoras = new RegisterRequest(
+                "neto",
+                "Desenvolvimento",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 16, 12, 0), // 27 horas depois
+                0
+        );
+
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(requestMapper.mapToRegisterHoras(requestComMuitasHoras)).thenReturn(registerHoras);
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.submitHours(requestComMuitasHoras);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 27));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar mantendo o mesmo estagiário")
+    void shouldUpdateKeepingSameEstagiario() {
+        // Given
+        UUID uuid = UUID.randomUUID();
+        RegisterRequest requestMesmoEstagiario = new RegisterRequest(
+                "neto", // Mesmo estagiário
+                "Nova descrição",
+                LocalDateTime.of(2024, 1, 16, 9, 0),
+                LocalDateTime.of(2024, 1, 16, 17, 0),
+                8
+        );
+
+        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.updateRegister(uuid, requestMesmoEstagiario);
+
+        // Then
+        // Não deve buscar novo usuário pois o estagiário é o mesmo
+        verify(usuarioRepository, never()).findByUsername("neto");
+        verify(registroHorasRepository).save(any(RegisterHoras.class));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar com horas fornecidas sem recalcular")
+    void shouldUpdateWithProvidedHoursWithoutRecalculating() {
+        // Given
+        UUID uuid = UUID.randomUUID();
+        RegisterRequest requestComHoras = new RegisterRequest(
+                "neto",
+                "Descrição",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 17, 0),
+                7 // Horas fornecidas (diferente do calculado que seria 8)
+        );
+
+        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
+
+        // When
+        registerHorasService.updateRegister(uuid, requestComHoras);
+
+        // Then
+        verify(registroHorasRepository).save(argThat(reg -> reg.getHorasTrabalhadas() == 7));
+    }
+
+    @Test
+    @DisplayName("Deve buscar múltiplos registros paginados")
+    void shouldFindMultipleRegistersPaginated() {
+        // Given
+        RegisterHoras registro2 = RegisterHoras.builder()
+                .id(UUID.randomUUID())
+                .estagiario("neto")
+                .descricao("Outra tarefa")
+                .dataInicio(LocalDateTime.of(2024, 1, 16, 9, 0))
+                .dataFim(LocalDateTime.of(2024, 1, 16, 17, 0))
+                .horasTrabalhadas(8)
+                .usuario(usuario)
+                .build();
+
+        RegisterResponse response2 = new RegisterResponse(
+                "neto",
+                "Outra tarefa",
+                LocalDateTime.of(2024, 1, 16, 9, 0),
+                LocalDateTime.of(2024, 1, 16, 17, 0),
+                8
+        );
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<RegisterHoras> page = new PageImpl<>(
+                List.of(registerHoras, registro2),
+                pageable,
+                2
+        );
+
+        when(registroHorasRepository.findAll(pageable)).thenReturn(page);
+        when(requestMapper.mapToListRegisterResponse(anyList()))
+                .thenReturn(List.of(registerResponse, response2));
+
+        // When
+        PageResponse<RegisterResponse> result = registerHorasService.findAllRegisteredHours(pageable);
+
+        // Then
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.first()).isTrue();
+        assertThat(result.last()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao atualizar com novo usuário inexistente")
+    void shouldThrowExceptionWhenUpdatingWithNonExistentNewUser() {
+        // Given
+        UUID uuid = UUID.randomUUID();
+        RegisterRequest requestComUsuarioInexistente = new RegisterRequest(
+                "inexistente",
+                "Descrição",
+                LocalDateTime.of(2024, 1, 15, 9, 0),
+                LocalDateTime.of(2024, 1, 15, 17, 0),
+                8
+        );
+
+        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(usuarioRepository.findByUsername("inexistente")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> registerHorasService.updateRegister(uuid, requestComUsuarioInexistente))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Usuário não encontrado");
+
+        verify(registroHorasRepository, never()).save(any());
     }
 }

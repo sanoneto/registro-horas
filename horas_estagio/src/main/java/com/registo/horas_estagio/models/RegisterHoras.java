@@ -3,6 +3,7 @@ package com.registo.horas_estagio.models;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -39,9 +40,8 @@ public class RegisterHoras {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
-    @JsonBackReference  // <-- Evita serialização circular
+    @JsonBackReference
+    @ToString.Exclude  // ⭐ SOLUÇÃO: Exclui do toString() para evitar ciclo
     private Usuario usuario;
-
-
 
 }

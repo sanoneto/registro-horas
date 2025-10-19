@@ -361,6 +361,7 @@ class RegisterHorasServiceTest {
         verify(registroHorasRepository, never()).save(any());
     }
 
+
     @Test
     @DisplayName("Deve usar horas fornecidas quando maior que zero")
     void shouldUseProvidedHoursWhenGreaterThanZero() {
@@ -373,9 +374,20 @@ class RegisterHorasServiceTest {
                 8 // Horas fornecidas
         );
 
+        // Criar um RegisterHoras com as horas fornecidas do request
+        RegisterHoras registerHorasComOitoHoras = RegisterHoras.builder()
+                .id(UUID.randomUUID())
+                .estagiario("neto")
+                .descricao("Desenvolvimento")
+                .dataInicio(LocalDateTime.of(2024, 1, 15, 9, 0))
+                .dataFim(LocalDateTime.of(2024, 1, 15, 18, 0))
+                .horasTrabalhadas(8) // Usar as horas do request
+                .usuario(usuario)
+                .build();
+
         when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
-        when(requestMapper.mapToRegisterHoras(requestComHorasFornecidas)).thenReturn(registerHoras);
-        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
+        when(requestMapper.mapToRegisterHoras(requestComHorasFornecidas)).thenReturn(registerHorasComOitoHoras);
+        when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHorasComOitoHoras);
         when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
 
         // When

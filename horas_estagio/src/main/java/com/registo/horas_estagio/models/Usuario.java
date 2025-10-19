@@ -1,9 +1,11 @@
 package com.registo.horas_estagio.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +17,16 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "usuario", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "username")
+})
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -33,6 +38,6 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore  // <-- Nunca serializa a lista de registros do usuário
-    private List<RegisterHoras> registros= new ArrayList<>();
+    private List<RegisterHoras> registros = new ArrayList<>();
 
 }

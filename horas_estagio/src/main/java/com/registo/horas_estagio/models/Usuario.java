@@ -1,9 +1,11 @@
 package com.registo.horas_estagio.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,6 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore  // <-- Nunca serializa a lista de registros do usuário
-    private List<RegisterHoras> registros= new ArrayList<>();
+    private List<RegisterHoras> registros = new ArrayList<>();
 
 }

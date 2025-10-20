@@ -99,7 +99,7 @@ jobs:
 
       - name: Define runtime variables
         run: |
-          echo "IMAGE=${{ github.event.inputs.image }}" >> $GITHUB_ENV
+          echo "IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ github.event.inputs.db_password }}" >> $GITHUB_ENV
           echo "NETWORK_NAME=horas_estagio_net" >> $GITHUB_ENV
           echo "DB_CONTAINER=horas_estagio_db" >> $GITHUB_ENV
@@ -211,5 +211,3 @@ jobs:
           APP_CONTAINER: ${{ env.APP_CONTAINER }}
           DB_CONTAINER: ${{ env.DB_CONTAINER }}
           NETWORK_NAME: ${{ env.NETWORK_NAME }}
-
-

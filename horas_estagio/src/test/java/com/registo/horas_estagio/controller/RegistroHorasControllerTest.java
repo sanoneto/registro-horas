@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -332,7 +332,7 @@ class RegistroHorasControllerUnitTest {
                         pageable.getPageNumber() == 1 &&
                                 pageable.getPageSize() == 5 &&
                                 pageable.getSort().getOrderFor("descricao") != null &&
-                                pageable.getSort().getOrderFor("descricao").getDirection() == Sort.Direction.ASC
+                                Objects.requireNonNull(pageable.getSort().getOrderFor("descricao")).getDirection() == Sort.Direction.ASC
                 )
         );
     }
@@ -519,7 +519,7 @@ class RegistroHorasControllerUnitTest {
 
         verify(registerHorasService).findAllRegisteredHours(
                 argThat(pageable ->
-                        pageable.getSort().getOrderFor("dataInicio").getDirection() == Sort.Direction.ASC
+                        Objects.requireNonNull(pageable.getSort().getOrderFor("dataInicio")).getDirection() == Sort.Direction.ASC
                 )
         );
     }
@@ -544,7 +544,7 @@ class RegistroHorasControllerUnitTest {
 
         verify(registerHorasService).findAllRegisteredHours(
                 argThat(pageable ->
-                        pageable.getSort().getOrderFor("dataInicio").getDirection() == Sort.Direction.DESC
+                        Objects.requireNonNull(pageable.getSort().getOrderFor("dataInicio")).getDirection() == Sort.Direction.DESC
                 )
         );
     }

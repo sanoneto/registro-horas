@@ -231,7 +231,7 @@ class UsuarioRepositoryTest {
         usuarioExistente.setRole("ROLE_ADMIN");
 
         // When
-        Usuario updated = usuarioRepository.save(usuarioExistente);
+        usuarioRepository.save(usuarioExistente);
         entityManager.flush();
         entityManager.clear();
 
@@ -319,7 +319,7 @@ class UsuarioRepositoryTest {
 
         List<Usuario> remaining = usuarioRepository.findAll();
         assertThat(remaining).hasSize(1);
-        assertThat(remaining.get(0).getUsername()).isEqualTo("admin");
+        assertThat(remaining.getFirst().getUsername()).isEqualTo("admin");
     }
 
     @Test
@@ -335,7 +335,7 @@ class UsuarioRepositoryTest {
 
         List<Usuario> remaining = usuarioRepository.findAll();
         assertThat(remaining).hasSize(1);
-        assertThat(remaining.get(0).getUsername()).isEqualTo("neto");
+        assertThat(remaining.getFirst().getUsername()).isEqualTo("neto");
     }
 
     @Test
@@ -971,7 +971,7 @@ class UsuarioRepositoryTest {
         Usuario found = usuarioRepository.findById(saved.getId()).orElseThrow();
         assertThat(found.getRegistros()).isNotEmpty();
         assertThat(found.getRegistros()).hasSize(1);
-        assertThat(found.getRegistros().get(0).getDescricao()).isEqualTo("Teste");
+        assertThat(found.getRegistros().getFirst().getDescricao()).isEqualTo("Teste");
     }
 
     @Test

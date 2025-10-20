@@ -3,9 +3,9 @@ name: Build + teste and publish end run Docker image
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ develop, master ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ develop, master ]
   workflow_dispatch:
 
 permissions:
@@ -100,7 +100,7 @@ jobs:
 
       - name: Pull application image from Docker Hub
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           echo "Pulling image: $IMAGE"
 
       - name: Run application container (pulled from Docker Hub)

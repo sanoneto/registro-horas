@@ -14,7 +14,7 @@ COPY ${APP_JAR} /app/app.jar
 EXPOSE 8080
 
 # Variáveis de ambiente com valores padrão (podem ser sobrescritas em tempo de execução)
-ENV SPRING_DATASOURCE_URL="jdbc:postgresql://db:5432/postgres"
+ENV SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/postgres"
 ENV SPRING_DATASOURCE_USERNAME="postgres"
 ENV SPRING_DATASOURCE_PASSWORD="admin"
 

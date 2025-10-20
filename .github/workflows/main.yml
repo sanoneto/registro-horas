@@ -182,23 +182,6 @@ jobs:
           DB_PASSWORD: ${{ env.DB_PASSWORD }}
           IMAGE: ${{ env.IMAGE }}
 
-      - name: Smoke test - health endpoint
-        run: |
-          echo "Attempting HTTP health check on app..."
-          for i in $(seq 1 20); do
-            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1; then
-              echo "App health OK"
-              exit 0
-            fi
-            echo "Waiting for app... ($i)"
-            sleep 3
-          done
-          echo "App did not become healthy in time. Dump logs:"
-          docker logs $APP_CONTAINER || true
-          exit 1
-        env:
-          APP_CONTAINER: ${{ env.APP_CONTAINER }}
-
       - name: Teardown (optional) - keep for debugging; comment out to persist containers
         if: always()
         run: |

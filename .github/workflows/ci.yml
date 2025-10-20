@@ -168,8 +168,7 @@ jobs:
             -p 8080:8080 \
             -e SPRING_DATASOURCE_URL=jdbc:postgresql://$DB_CONTAINER:5432/postgres \
             -e SPRING_DATASOURCE_USERNAME=postgres \
-            -e SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD \
-            -e SPRING_PROFILES_ACTIVE=prod \
+            -e SPRING_DATASOURCE_PASSWORD=admin \
             $IMAGE
 
           echo "Waiting a few seconds for application to start..."

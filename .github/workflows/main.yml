@@ -3,9 +3,7 @@ name: Build + teste and publish end run Docker image
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ develop ]
   workflow_dispatch:
 
 permissions:
@@ -74,9 +72,8 @@ jobs:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
     
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -84,19 +81,12 @@ jobs:
           context: ${{ env.PROJECT_DIR }}
           file: ${{ env.PROJECT_DIR }}/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
           # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          build-args: |
-            MAVEN_BUILD=target
-
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       - name: Image info
         run: |
           echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        ##---------------------------------Novas------------------------------------------------------
-
+       
       - name: Define runtime variables
         run: |
           echo "IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
@@ -105,62 +95,11 @@ jobs:
           echo "DB_CONTAINER=postgres" >> $GITHUB_ENV
           echo "APP_CONTAINER=horas_estagio_app" >> $GITHUB_ENV
 
-      - name: Create docker network
-        run: |
-          docker network create $NETWORK_NAME || true
-        env:
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-
-      - name: Start Postgres container
-        run: |
-          docker run -d --name $DB_CONTAINER \
-            --network $NETWORK_NAME \
-            -e POSTGRES_DB=postgres \
-            -e POSTGRES_USER=postgres \
-            -e POSTGRES_PASSWORD=admin \
-            -p 5432:5432 \
-            postgres:15
-        env:
-          DB_CONTAINER: ${{ env.DB_CONTAINER }}
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-
-      - name: Wait for Postgres to be ready
-        run: |
-          echo "Waiting for Postgres on network $NETWORK_NAME..."
-          for i in $(seq 1 60); do
-            if docker exec $DB_CONTAINER pg_isready -U postgres >/dev/null 2>&1; then
-              echo "Postgres ready"
-              break
-            fi
-            echo "  waiting... ($i)"
-            sleep 2
-          done
-
-          if ! docker exec $DB_CONTAINER pg_isready -U postgres >/dev/null 2>&1; then
-            echo "Postgres not ready after timeout" >&2
-            docker logs $DB_CONTAINER || true
-            exit 1
-          fi
-        env:
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-          DB_CONTAINER: ${{ env.DB_CONTAINER }}
-
       - name: Pull application image from Docker Hub
         run: |
+          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           echo "Pulling image: $IMAGE"
-          docker pull $IMAGE
-        env:
-          IMAGE: ${{ env.IMAGE }}
-
-      - name: Stop & remove previous app container if exists
-        run: |
-          if [ "$(docker ps -aq -f name=$APP_CONTAINER)" ]; then
-            docker rm -f $APP_CONTAINER || true
-          fi
-        env:
-          APP_CONTAINER: ${{ env.APP_CONTAINER }}
-
+          
       - name: Run application container (pulled from Docker Hub)
         run: |
           docker run -d --name $APP_CONTAINER \

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:23-jre-jammy
+FROM eclipse-temurin:23-jre
 ARG APP_JAR=target/*.jar
 WORKDIR /app
 

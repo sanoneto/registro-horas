@@ -22,6 +22,7 @@ jobs:
     env:
       IMAGE_NAME: horas_estagio
       REGISTRY: ghcr.io
+      PROJECT_DIR: ./horas_estagio
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,17 +43,18 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2-
+            
        # Trabalhar na subpasta horas_estagio onde está o pom.xml e o mvnw
       - name: Grant execute permission for mvnw
-        working-directory: ./horas_estagio
+        working-directory: ${{ env.PROJECT_DIR }}
         run: chmod +x ./mvnw
         
       - name: Build (compile + tests)
-        working-directory: ./horas_estagio
+        working-directory: ${{ env.PROJECT_DIR }}
         run: mvn -B -U clean package
 
       - name: Package artifact (skip tests)
-        working-directory: ./horas_estagio
+        working-directory: ${{ env.PROJECT_DIR }}
         run: ./mvnw -B -DskipTests clean package
 
       - name: Upload artifact

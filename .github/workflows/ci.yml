@@ -1,4 +1,4 @@
-# language: yaml
+# ... existing code ...
 name: CI
 
 on:
@@ -6,13 +6,13 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-
+    
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./registro-horas    # garantir que a raiz é usada
+        working-directory: .   # USAR a raiz do workspace (evita duplicações)
     strategy:
       matrix:
         java-version: [23]
@@ -23,7 +23,9 @@ jobs:
       - name: Debug workspace
         run: |
           echo "PWD: $(pwd)"
+          echo "Top-level files:"
           ls -la
+          echo "Find pom.xml and mvnw:"
           find . -maxdepth 4 -name pom.xml -o -name mvnw -print || true
 
       - name: Set up JDK
@@ -40,7 +42,7 @@ jobs:
         run: ./mvnw -B -V clean verify
 
       - name: Package artifact (skip tests)
-        run: ./registro-horas/mvnw -B -DskipTests clean package
+        run: ./mvnw -B -DskipTests clean package
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -48,7 +50,6 @@ jobs:
           name: app-jar
           path: target/*.jar
 
-      # Exemplo: publicar imagem Docker (opcional). Ative definindo DOCKER_PUBLISH=true e configurando secrets.
       - name: Build and push Docker image (optional)
         if: env.DOCKER_PUBLISH == 'true'
         env:
@@ -58,3 +59,4 @@ jobs:
           docker build -t $DOCKERHUB_USER/registro-horas:${{ github.sha }} .
           echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
           docker push $DOCKERHUB_USER/registro-horas:${{ github.sha }}
+# ... existing code ...

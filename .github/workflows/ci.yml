@@ -81,8 +81,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: ${{ env.PROJECT_DIR }}
+          file: ${{ env.PROJECT_DIR }}/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME

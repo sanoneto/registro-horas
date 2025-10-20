@@ -23,7 +23,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="horas_estagio" options="-parameters" />
+      <module name="horas_estagio" options="-parameters --enable-preview" />
     </option>
   </component>
 </project>

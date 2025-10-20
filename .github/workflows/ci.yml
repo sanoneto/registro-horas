@@ -1,3 +1,4 @@
+# language: yaml
 name: Build and publish Docker image
 
 on:

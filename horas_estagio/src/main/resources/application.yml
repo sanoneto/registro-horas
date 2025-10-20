@@ -6,8 +6,9 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update # Gera ou atualiza as tabelas automaticamente.
+      ddl-auto: validate # Gera ou atualiza as tabelas automaticamente.
     show-sql: true # Exibe as queries SQL no console.
+    open-in-view: true
   application:
     name: registo-horas
 

@@ -6,13 +6,13 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-defaults:
-  run:
-     working-directory: ./
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+       working-directory: ./registro-horas
     strategy:
       matrix:
         java-version: [23]

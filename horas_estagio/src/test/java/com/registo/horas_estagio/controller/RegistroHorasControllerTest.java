@@ -64,7 +64,7 @@ class RegistroHorasControllerUnitTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).estagiario()).isEqualTo("neto");
+        assertThat(response.getBody().getFirst().estagiario()).isEqualTo("neto");
 
         verify(registerHorasService).findAllRegisteredHours();
     }
@@ -162,7 +162,7 @@ class RegistroHorasControllerUnitTest {
                         pageable.getPageNumber() == 0 &&
                                 pageable.getPageSize() == 5 &&
                                 pageable.getSort().getOrderFor("estagiario") != null &&
-                                pageable.getSort().getOrderFor("estagiario").getDirection() == Sort.Direction.ASC
+                                Objects.requireNonNull(pageable.getSort().getOrderFor("estagiario")).getDirection() == Sort.Direction.ASC
                 )
         );
     }
@@ -233,7 +233,7 @@ class RegistroHorasControllerUnitTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).estagiario()).isEqualTo("neto");
+        assertThat(response.getBody().getFirst().estagiario()).isEqualTo("neto");
 
         verify(registerHorasService).findAllRegisteredHoursUser("neto");
     }
@@ -277,7 +277,7 @@ class RegistroHorasControllerUnitTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().content()).hasSize(1);
-        assertThat(response.getBody().content().get(0).estagiario()).isEqualTo("neto");
+        assertThat(response.getBody().content().getFirst().estagiario()).isEqualTo("neto");
 
         verify(registerHorasService).findAllRegisteredHoursUser(eq("neto"), any(Pageable.class));
     }

@@ -6,11 +6,17 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # Gera ou atualiza as tabelas automaticamente.
+      ddl-auto: none # Gera ou atualiza as tabelas automaticamente.
     show-sql: true # Exibe as queries SQL no console.
     open-in-view: true
   application:
     name: registo-horas
+
+# Configuração do Flyway (migrations em src/main/resources/db/migration)
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 server:
   port: 8080
@@ -36,3 +42,4 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.registo.horas_estagio: DEBUG
+    org.flywaydb: DEBUG

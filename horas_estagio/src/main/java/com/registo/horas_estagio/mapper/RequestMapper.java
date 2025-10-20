@@ -13,7 +13,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface RequestMapper {
 
-    @Mapping(target = "publicId", source = "publicId")
     @Mapping(target = "username", source = "username")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "role", source = "role")

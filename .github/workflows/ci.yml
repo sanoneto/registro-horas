@@ -12,25 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-       working-directory: registro-horas
+        working-directory: .    # garantir que a raiz é usada
     strategy:
       matrix:
         java-version: [23]
     steps:
-      - uses: actions/checkout@v4
-      - name: Debug workspace
-        run: |
-          pwd
-          ls -la
-          find . -maxdepth 4 -name pom.xml -o -name mvnw -print || true
-
-      - name: Grant execute permission for mvnw
-        run: chmod +x ./mvnw
-
-      - name: Build (compile + tests)
-        run: ./mvnw -B -V clean verify
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Debug workspace
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la
+          find . -maxdepth 4 -name pom.xml -o -name mvnw -print || true
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -38,14 +32,6 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
           cache: maven
-
-      - name: Cache Maven local repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
 
       - name: Grant execute permission for mvnw
         run: chmod +x ./mvnw

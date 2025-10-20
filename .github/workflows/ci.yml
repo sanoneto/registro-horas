@@ -6,6 +6,9 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+defaults:
+  run:
+     working-directory: ./horas_estagio
 
 jobs:
   build-and-test:
@@ -36,11 +39,9 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Build (compile + tests)
-        working-directory: .
         run: ./mvnw -B -V clean verify
 
       - name: Package artifact (skip tests)
-        working-directory: .
         run: ./mvnw -B -DskipTests clean package
 
       - name: Upload artifact

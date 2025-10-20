@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: .    # garantir que a raiz é usada
+        working-directory: ./registro-horas    # garantir que a raiz é usada
     strategy:
       matrix:
         java-version: [23]
@@ -34,10 +34,10 @@ jobs:
           cache: maven
 
       - name: Grant execute permission for mvnw
-        run: chmod +x ./registro-horas/mvnw
+        run: chmod +x ./mvnw
 
       - name: Build (compile + tests)
-        run: ./registro-horas/mvnw -B -V clean verify
+        run: ./mvnw -B -V clean verify
 
       - name: Package artifact (skip tests)
         run: ./registro-horas/mvnw -B -DskipTests clean package

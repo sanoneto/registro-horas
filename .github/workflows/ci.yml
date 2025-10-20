@@ -34,13 +34,13 @@ jobs:
           cache: maven
 
       - name: Grant execute permission for mvnw
-        run: chmod +x ./mvnw
+        run: chmod +x ./registro-horas/mvnw
 
       - name: Build (compile + tests)
-        run: ./mvnw -B -V clean verify
+        run: ./registro-horas/mvnw -B -V clean verify
 
       - name: Package artifact (skip tests)
-        run: ./mvnw -B -DskipTests clean package
+        run: ./registro-horas/mvnw -B -DskipTests clean package
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

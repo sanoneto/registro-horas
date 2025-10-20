@@ -14,50 +14,56 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
     private static final Logger log = LoggerFactory.getLogger(CustomUserDetailsService.class);
-    private final UsuarioRepository usuarioRepository; // Seu repositório de usuários
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Busque o usuário no banco de dados
         Usuario user = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
 
-        Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
+        log.info("Carregando usuário: {}", user.getUsername());
 
-        // Log para debug (IMPORTANTE PARA DIAGNOSTICAR)
-        log.info(" Carregando usuário: {}", user.getUsername());
-        log.info(" Role do banco: {}", user.getRole());
-        log.info(" Authorities configuradas: {}", authorities);
+        Collection<? extends GrantedAuthority> authorities = buildAuthorities(user);
 
-        // Retorne um UserDetails do Spring Security
+        log.info("Role do banco: {}", user.getRole());
+        log.info("Authorities configuradas: {}", authorities);
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
-                .password(user.getPassword()) // Deve estar criptografada com BCrypt
-                .authorities(authorities) // ou .roles("USER", "ADMIN")
+                .password(user.getPassword())
+                .authorities(authorities)
                 .build();
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities(Usuario user) {
+    /**
+     * Constrói a coleção de GrantedAuthority para o usuário.
+     * Normaliza a role (adiciona prefixo ROLE_ se necessário) e valida sua presença.
+     *
+     * @param user usuário carregado do repositório
+     * @return lista imutável com as authorities
+     * @throws UsernameNotFoundException quando role estiver ausente/inválida
+     */
+    private Collection<? extends GrantedAuthority> buildAuthorities(Usuario user) {
         String role = user.getRole();
 
-        // Validação para role null (não deveria ocorrer devido à constraint no banco)
         if (role == null || role.isBlank()) {
-            log.error("Role null ou vazia para usuário: {}", user.getUsername());
-            throw new IllegalStateException("Usuário sem role definida: " + user.getUsername());
+            log.error("Role ausente para usuário: {}", user.getUsername());
+            // Lança UsernameNotFoundException para manter consistência com UserDetailsService
+            throw new UsernameNotFoundException("Usuário sem role definida: " + user.getUsername());
         }
 
-        // Se a role no banco já tem o prefixo ROLE_, usa diretamente
-        // Caso contrário, adiciona o prefixo
-        if (!role.startsWith("ROLE_")) {
-            role = "ROLE_" + role.toUpperCase();
+        String normalizedRole = role.toUpperCase(Locale.ROOT);
+        if (!normalizedRole.startsWith("ROLE_")) {
+            normalizedRole = "ROLE_" + normalizedRole;
         }
 
-        log.info(" Authority final: {}", role);
-        return List.of(new SimpleGrantedAuthority(role));
+        log.debug("Authority final gerada para usuário {}: {}", user.getUsername(), normalizedRole);
+        return List.of(new SimpleGrantedAuthority(normalizedRole));
     }
 }

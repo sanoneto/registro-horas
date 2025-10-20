@@ -22,7 +22,6 @@ jobs:
     env:
       IMAGE_NAME: horas_estagio
       REGISTRY: ghcr.io
-      REPOSITORY: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,7 +55,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+    
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -64,12 +63,15 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
+          # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
           tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: |
             MAVEN_BUILD=target
 
       - name: Image info
         run: |
-          echo "Image pushed: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}"
+          echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+

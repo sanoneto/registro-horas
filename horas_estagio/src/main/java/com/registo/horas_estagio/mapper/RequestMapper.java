@@ -13,13 +13,14 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface RequestMapper {
 
-
+    @Mapping(target = "publicId", source = "publicId")
     @Mapping(target = "username", source = "username")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "role", source = "role")
     Usuario mapToRegisterHoras(UserCredentialsRequest userCredentialsRequest);
 
 
+    @Mapping(target = "publicId", source = "publicId")
     @Mapping(target = "estagiario", source = "estagiario")
     @Mapping(target = "descricao", source = "descricao")
     @Mapping(target = "dataInicio", source = "dataInicio")

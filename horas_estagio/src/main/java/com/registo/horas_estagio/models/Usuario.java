@@ -21,8 +21,12 @@ import java.util.UUID;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // ID público (segurança)
+    @Column(unique = true, nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Username não pode ser vazio") // Adicionar
@@ -61,5 +65,9 @@ public class Usuario {
         if (this.username != null && !this.username.equals(this.username.toLowerCase().trim())) {
             this.username = this.username.trim().toLowerCase();
         }
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID();
+        }
     }
+
 }

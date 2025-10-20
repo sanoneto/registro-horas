@@ -21,8 +21,8 @@ public interface RegisterHorasService {
 
     PageResponse<RegisterResponse> findAllRegisteredHoursUser(String name, Pageable pageable);
 
-    void DeleteRegisteredHoursUser(UUID uuid);
+    void DeleteRegisteredHoursUser(UUID publicId);
 
-    RegisterResponse updateRegister(UUID uuid, RegisterRequest request);
+    RegisterResponse updateRegister(UUID publicId, RegisterRequest request);
 }
 

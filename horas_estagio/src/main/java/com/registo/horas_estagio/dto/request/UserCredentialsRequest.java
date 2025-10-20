@@ -6,8 +6,13 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.UUID;
+
 @Schema(description = "Request para create User")
 public record UserCredentialsRequest(
+
+         UUID publicId,
+
         @Schema(
                 description = "user name necessario",
                 example = "bento",

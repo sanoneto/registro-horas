@@ -139,7 +139,7 @@ class RegistroHorasRepositoryTest {
         UUID idInexistente = UUID.randomUUID();
 
         // When
-        Optional<RegisterHoras> found = registroHorasRepository.findById(idInexistente);
+        Optional<RegisterHoras> found = registroHorasRepository.findByPublicId(idInexistente);
 
         // Then
         assertThat(found).isEmpty();
@@ -262,7 +262,7 @@ class RegistroHorasRepositoryTest {
     @DisplayName("Deve deletar registro por ID")
     void shouldDeleteRegisterById() {
         // Given
-        UUID idParaDeletar = registro1.getId();
+        Long idParaDeletar = registro1.getId();
 
         // When
         registroHorasRepository.deleteById(idParaDeletar);
@@ -322,7 +322,7 @@ class RegistroHorasRepositoryTest {
     void shouldCheckIfRegisterExistsById() {
         // When
         boolean exists = registroHorasRepository.existsById(registro1.getId());
-        boolean notExists = registroHorasRepository.existsById(UUID.randomUUID());
+        boolean notExists = registroHorasRepository.existsById(1L);
 
         // Then
         assertThat(exists).isTrue();

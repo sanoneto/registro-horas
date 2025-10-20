@@ -168,10 +168,10 @@ public class RegistroHorasController {
             @ApiResponse(responseCode = "404", description = "Registro não encontrado"),
             @ApiResponse(responseCode = "403", description = "Acesso negado - apenas ADMIN")
     })
-    @DeleteMapping("delete/{uuid}")
+    @DeleteMapping("delete/{publicId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteRegister(@PathVariable UUID uuid) {
-        registerHorasService.DeleteRegisteredHoursUser(uuid);
+    public ResponseEntity<Void> deleteRegister(@PathVariable UUID publicId) {
+        registerHorasService.DeleteRegisteredHoursUser(publicId);
         return ResponseEntity.noContent().build();
     }
 }

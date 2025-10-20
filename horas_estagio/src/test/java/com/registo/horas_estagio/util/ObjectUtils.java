@@ -18,6 +18,7 @@ public class ObjectUtils {
 
     public static RegisterRequest createDefaultRequest() {
         return new RegisterRequest(
+                UUID.randomUUID(),
                 ESTAGIARIO_PADRAO,
                 DESCRICAO_PADRAO,
                 DATA_INICIO_PADRAO,
@@ -28,6 +29,7 @@ public class ObjectUtils {
 
     public static RegisterResponse createDefaultResponse() {
         return new RegisterResponse(
+                UUID.randomUUID(),
                 ESTAGIARIO_PADRAO,
                 DESCRICAO_PADRAO,
                 DATA_INICIO_PADRAO,
@@ -38,7 +40,8 @@ public class ObjectUtils {
 
     public static Usuario createDefaultUsuario() {
         return Usuario.builder()
-                .id(UUID.randomUUID())
+                .id(1L)
+                .publicId(UUID.randomUUID())
                 .username(ESTAGIARIO_PADRAO)
                 .password("senha123")
                 .role("ROLE_ESTAGIARIO")
@@ -48,7 +51,8 @@ public class ObjectUtils {
     public static RegisterHoras createDefaultRegisterHoras() {
         Usuario usuario = createDefaultUsuario();
         return RegisterHoras.builder()
-                .id(UUID.randomUUID())
+                .id(1L)
+                .publicId(UUID.randomUUID())
                 .estagiario(ESTAGIARIO_PADRAO)
                 .descricao(DESCRICAO_PADRAO)
                 .dataInicio(DATA_INICIO_PADRAO)

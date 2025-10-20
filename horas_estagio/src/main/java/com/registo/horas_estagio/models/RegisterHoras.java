@@ -17,9 +17,14 @@ import java.util.UUID;
 @Table(name = "register_horas")
 public class RegisterHoras {
 
+    // ID interno (performance)
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // ID público (segurança)
+    @Column(unique = true, nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(nullable = false)
     private String estagiario;
@@ -41,5 +46,16 @@ public class RegisterHoras {
     @JsonBackReference
     @ToString.Exclude  // ⭐ SOLUÇÃO: Exclui do toString() para evitar ciclo
     private Usuario usuario;
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeUsername() {
+        if (this.estagiario != null && !this.estagiario.equals(this.estagiario.toLowerCase().trim())) {
+            this.estagiario = this.estagiario.trim().toLowerCase();
+        }
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID();
+        }
+    }
 
 }

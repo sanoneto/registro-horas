@@ -1,4 +1,4 @@
-package com.registo.horas_estagio.servico;
+package com.registo.horas_estagio.service;
 
 import com.registo.horas_estagio.dto.request.RegisterRequest;
 import com.registo.horas_estagio.dto.response.PageResponse;
@@ -108,6 +108,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursAutomatically() {
         // Given
         RegisterRequest requestSemHoras = new RegisterRequest(
+                UUID.randomUUID() ,
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -199,7 +200,7 @@ class RegisterHorasServiceTest {
     void shouldUpdateRegisterSuccessfully() {
         // Given
         UUID uuid = UUID.randomUUID();
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
         when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
         when(requestMapper.mapRegisterResponse(registerHoras)).thenReturn(registerResponse);
@@ -209,7 +210,7 @@ class RegisterHorasServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        verify(registroHorasRepository).findById(uuid);
+        verify(registroHorasRepository).findByPublicId(uuid);
         verify(registroHorasRepository).save(any(RegisterHoras.class));
     }
 
@@ -217,15 +218,15 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve lançar exceção ao atualizar registro inexistente")
     void shouldThrowExceptionWhenUpdatingNonExistentRegister() {
         // Given
-        UUID uuid = UUID.randomUUID();
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.empty());
+       UUID uuid = UUID.randomUUID();
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> registerHorasService.updateRegister(uuid, registerRequest))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Registro não encontrado");
 
-        verify(registroHorasRepository).findById(uuid);
+        verify(registroHorasRepository).findByPublicId(uuid);
         verify(registroHorasRepository, never()).save(any());
     }
 
@@ -233,15 +234,15 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve deletar registro com sucesso")
     void shouldDeleteRegisterSuccessfully() {
         // Given
-        UUID uuid = UUID.randomUUID();
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+       UUID uuid = UUID.randomUUID();
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         doNothing().when(registroHorasRepository).delete(registerHoras);
 
         // When
         registerHorasService.DeleteRegisteredHoursUser(uuid);
 
         // Then
-        verify(registroHorasRepository).findById(uuid);
+        verify(registroHorasRepository).findByPublicId(uuid);
         verify(registroHorasRepository).delete(registerHoras);
     }
 
@@ -252,15 +253,15 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve lançar exceção ao deletar registro inexistente")
     void shouldThrowExceptionWhenDeletingNonExistentRegister() {
         // Given
-        UUID uuid = UUID.randomUUID();
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.empty());
+      UUID uuid = UUID.randomUUID();
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> registerHorasService.DeleteRegisteredHoursUser(uuid))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Registro não encontrado");
 
-        verify(registroHorasRepository).findById(uuid);
+        verify(registroHorasRepository).findByPublicId(uuid);
         verify(registroHorasRepository, never()).delete(any());
     }
 
@@ -295,6 +296,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursWhenHoursIsZero() {
         // Given
         RegisterRequest requestComZeroHoras = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -319,6 +321,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursWhenHoursIsNegative() {
         // Given
         RegisterRequest requestComHorasNegativas = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -343,6 +346,7 @@ class RegisterHorasServiceTest {
     void shouldThrowExceptionWhenEndDateIsBeforeStartDate() {
         // Given
         RegisterRequest requestComDatasInvalidas = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 18, 0),
@@ -367,6 +371,7 @@ class RegisterHorasServiceTest {
     void shouldUseProvidedHoursWhenGreaterThanZero() {
         // Given
         RegisterRequest requestComHorasFornecidas = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -376,7 +381,8 @@ class RegisterHorasServiceTest {
 
         // Criar um RegisterHoras com as horas fornecidas do request
         RegisterHoras registerHorasComOitoHoras = RegisterHoras.builder()
-                .id(UUID.randomUUID())
+                .id(1L)
+                .publicId(UUID.randomUUID())
                 .estagiario("neto")
                 .descricao("Desenvolvimento")
                 .dataInicio(LocalDateTime.of(2024, 1, 15, 9, 0))
@@ -403,13 +409,15 @@ class RegisterHorasServiceTest {
         // Given
         UUID uuid = UUID.randomUUID();
         Usuario novoUsuario = Usuario.builder()
-                .id(UUID.randomUUID())
+                .id(1L)
+                .publicId(UUID.randomUUID())
                 .username("admin")
                 .password("senha")
                 .role("ROLE_ADMIN")
                 .build();
 
         RegisterRequest requestComNovoEstagiario = new RegisterRequest(
+                UUID.randomUUID(),
                 "admin", // Estagiário diferente
                 "Nova descrição",
                 LocalDateTime.of(2024, 1, 16, 9, 0),
@@ -417,7 +425,7 @@ class RegisterHorasServiceTest {
                 8
         );
 
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(novoUsuario));
         when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
         when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
@@ -437,8 +445,9 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve recalcular horas ao atualizar com horas zero")
     void shouldRecalculateHoursWhenUpdatingWithZeroHours() {
         // Given
-        UUID uuid = UUID.randomUUID();
+         UUID uuid =UUID.randomUUID();
         RegisterRequest requestComZeroHoras = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Descrição atualizada",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -446,7 +455,7 @@ class RegisterHorasServiceTest {
                 0 // Força recálculo
         );
 
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
         when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
         when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
@@ -514,6 +523,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursGreaterThan24Correctly() {
         // Given
         RegisterRequest requestComMuitasHoras = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -537,8 +547,9 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve atualizar mantendo o mesmo estagiário")
     void shouldUpdateKeepingSameEstagiario() {
         // Given
-        UUID uuid = UUID.randomUUID();
+         UUID uuid =  UUID.randomUUID();
         RegisterRequest requestMesmoEstagiario = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto", // Mesmo estagiário
                 "Nova descrição",
                 LocalDateTime.of(2024, 1, 16, 9, 0),
@@ -546,7 +557,7 @@ class RegisterHorasServiceTest {
                 8
         );
 
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
         when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
         when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
@@ -564,8 +575,9 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve atualizar com horas fornecidas sem recalcular")
     void shouldUpdateWithProvidedHoursWithoutRecalculating() {
         // Given
-        UUID uuid = UUID.randomUUID();
+        UUID uuid =  UUID.randomUUID();
         RegisterRequest requestComHoras = new RegisterRequest(
+                UUID.randomUUID(),
                 "neto",
                 "Descrição",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -573,7 +585,7 @@ class RegisterHorasServiceTest {
                 7 // Horas fornecidas (diferente do calculado que seria 8)
         );
 
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("neto")).thenReturn(Optional.of(usuario));
         when(registroHorasRepository.save(any(RegisterHoras.class))).thenReturn(registerHoras);
         when(requestMapper.mapRegisterResponse(any())).thenReturn(registerResponse);
@@ -590,7 +602,8 @@ class RegisterHorasServiceTest {
     void shouldFindMultipleRegistersPaginated() {
         // Given
         RegisterHoras registro2 = RegisterHoras.builder()
-                .id(UUID.randomUUID())
+                .id(1L)
+                .publicId(UUID.randomUUID())
                 .estagiario("neto")
                 .descricao("Outra tarefa")
                 .dataInicio(LocalDateTime.of(2024, 1, 16, 9, 0))
@@ -600,6 +613,7 @@ class RegisterHorasServiceTest {
                 .build();
 
         RegisterResponse response2 = new RegisterResponse(
+                UUID.randomUUID(),
                 "neto",
                 "Outra tarefa",
                 LocalDateTime.of(2024, 1, 16, 9, 0),
@@ -632,8 +646,9 @@ class RegisterHorasServiceTest {
     @DisplayName("Deve lançar exceção ao atualizar com novo usuário inexistente")
     void shouldThrowExceptionWhenUpdatingWithNonExistentNewUser() {
         // Given
-        UUID uuid = UUID.randomUUID();
+        UUID uuid =  UUID.randomUUID();
         RegisterRequest requestComUsuarioInexistente = new RegisterRequest(
+                UUID.randomUUID(),
                 "inexistente",
                 "Descrição",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -641,7 +656,7 @@ class RegisterHorasServiceTest {
                 8
         );
 
-        when(registroHorasRepository.findById(uuid)).thenReturn(Optional.of(registerHoras));
+        when(registroHorasRepository.findByPublicId(uuid)).thenReturn(Optional.of(registerHoras));
         when(usuarioRepository.findByUsername("inexistente")).thenReturn(Optional.empty());
 
         // When & Then

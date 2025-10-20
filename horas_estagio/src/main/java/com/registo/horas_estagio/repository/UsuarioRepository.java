@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByUsername(String username);
 
     /**
@@ -17,5 +17,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
      */
     @Query("SELECT u FROM Usuario u WHERE LOWER(u.username) = LOWER(:username)")
     Optional<Usuario> findByUsernameIgnoreCase(@Param("username") String username);
+
 }
 

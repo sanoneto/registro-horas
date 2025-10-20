@@ -1,4 +1,4 @@
-package com.registo.horas_estagio.servico;
+package com.registo.horas_estagio.service;
 
 import com.registo.horas_estagio.models.Usuario;
 import com.registo.horas_estagio.repository.UsuarioRepository;
@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,7 +56,7 @@ class UsuarioServiceTest {
         when(passwordEncoder.encode(senhaOriginal)).thenReturn(senhaCodificada);
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
             Usuario user = invocation.getArgument(0);
-            user.setId(UUID.randomUUID());
+            user.setId(1L);
             return user;
         });
 
@@ -246,7 +245,7 @@ class UsuarioServiceTest {
         when(passwordEncoder.encode("senha456")).thenReturn("encodedPassword");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
             Usuario saved = invocation.getArgument(0);
-            saved.setId(UUID.randomUUID());
+            saved.setId(1L);
             return saved;
         });
 

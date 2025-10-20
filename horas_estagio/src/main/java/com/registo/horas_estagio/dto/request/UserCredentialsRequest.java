@@ -17,6 +17,7 @@ public record UserCredentialsRequest(
                 description = "user name necessario",
                 example = "bento",
                 required = true
+
         )
         @NotBlank(message = "O primeiro nome é obrigatório")
         @Size(min = 2, max = 50, message = "Nome deve ter entre 2 e 50 caracteres")

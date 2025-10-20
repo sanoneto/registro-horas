@@ -16,6 +16,9 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [23]
     env:
       IMAGE_NAME: horas_estagio
       REGISTRY: ghcr.io
@@ -30,7 +33,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 23
+          java-version: ${{ matrix.java-version }}
           cache: 'maven'
 
       - name: Cache Maven local repository

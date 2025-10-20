@@ -8,7 +8,7 @@ on:
     branches: [ main, master ]
 defaults:
   run:
-     working-directory: ./registro-horas
+     working-directory: registro-horas
 
 jobs:
   build-and-test:

@@ -3,9 +3,9 @@ name: Build + teste and publish end run Docker image
 
 on:
   push:
-    branches: [ develop, master ]
+    branches:  develop
   pull_request:
-    branches: [ develop, master ]
+    branches: develop 
   workflow_dispatch:
 
 permissions:

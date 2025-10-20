@@ -23,3 +23,11 @@ jwt:
   secret: test-secret-key-for-testing-purposes-must-be-long-enough
   expiration: 86400000
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

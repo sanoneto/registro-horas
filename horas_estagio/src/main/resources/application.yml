@@ -17,6 +17,16 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+# usado para atuator metricas ,info
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,beans
+  endpoint:
+    health:
+      show-details: never   # alterar para 'always' ou 'when_authorized' conforme necessidade
+
 
 server:
   port: 8080

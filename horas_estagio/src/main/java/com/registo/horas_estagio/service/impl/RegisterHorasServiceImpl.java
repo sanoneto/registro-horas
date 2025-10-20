@@ -122,29 +122,29 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
     @Override
     @Transactional
-    public void DeleteRegisteredHoursUser(UUID uuid) {
-        log.info("Deletando registro com ID: {}", uuid);
+    public void DeleteRegisteredHoursUser(UUID publicId) {
+        log.info("Deletando registro com ID: {}", publicId);
 
-        RegisterHoras registerHoras = registroHorasRepository.findById(uuid)
+        RegisterHoras registerHoras = registroHorasRepository.findByPublicId(publicId)
                 .orElseThrow(() -> {
-                    log.error("Registro não encontrado para deletar. ID: {}", uuid);
-                    return new RuntimeException("Registro não encontrado com ID: " + uuid);
+                    log.error("Registro não encontrado para deletar. ID: {}", publicId);
+                    return new RuntimeException("Registro não encontrado com ID: " + publicId);
                 });
 
         registroHorasRepository.delete(registerHoras);
-        log.info("Registro {} deletado com sucesso", uuid);
+        log.info("Registro {} deletado com sucesso", publicId);
     }
 
     @Override
     @Transactional
-    public RegisterResponse updateRegister(UUID uuid, RegisterRequest request) {
-        log.info("Atualizando registro com ID: {}", uuid);
+    public RegisterResponse updateRegister(UUID publicId, RegisterRequest request) {
+        log.info("Atualizando registro com ID: {}", publicId);
 
         // 1. Buscar registro existente
-        RegisterHoras registerHoras = registroHorasRepository.findById(uuid)
+        RegisterHoras registerHoras = registroHorasRepository.findByPublicId(publicId)
                 .orElseThrow(() -> {
-                    log.error("Registro não encontrado com ID: {}", uuid);
-                    return new RuntimeException("Registro não encontrado com ID: " + uuid);
+                    log.error("Registro não encontrado com ID: {}", publicId);
+                    return new RuntimeException("Registro não encontrado com ID: " + publicId);
                 });
 
         // 2. Atualizar campos básicos
@@ -168,7 +168,7 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         // 5. Salvar alterações
         RegisterHoras updated = registroHorasRepository.save(registerHoras);
-        log.info("Registro {} atualizado com sucesso", uuid);
+        log.info("Registro {} atualizado com sucesso", publicId);
 
         return requestMapper.mapRegisterResponse(updated);
     }

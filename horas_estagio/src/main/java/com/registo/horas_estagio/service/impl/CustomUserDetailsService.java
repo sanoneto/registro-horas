@@ -45,9 +45,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private Collection<? extends GrantedAuthority> getAuthorities(Usuario user) {
         String role = user.getRole();
 
+        // Validação para role null (não deveria ocorrer devido à constraint no banco)
+        if (role == null || role.isBlank()) {
+            log.error("Role null ou vazia para usuário: {}", user.getUsername());
+            throw new IllegalStateException("Usuário sem role definida: " + user.getUsername());
+        }
+
         // Se a role no banco já tem o prefixo ROLE_, usa diretamente
         // Caso contrário, adiciona o prefixo
-        if (role != null && !role.startsWith("ROLE_")) {
+        if (!role.startsWith("ROLE_")) {
             role = "ROLE_" + role.toUpperCase();
         }
 

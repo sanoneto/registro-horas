@@ -1,8 +1,9 @@
+# language: yaml
 name: CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
@@ -31,15 +32,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Grant execute permission for mvnw
+        run: chmod +x ./mvnw
+
       - name: Build (compile + tests)
-        run: mvn -B -V clean verify
+        working-directory: .
+        run: ./mvnw -B -V clean verify
 
-      - name: Run additional static analysis (optional)
-        # Exemplo: se tiver plugins como spotbugs, checkstyle configurados no pom
-        run: mvn -B spotbugs:check checkstyle:check || true
-
-      - name: Package artifact
-        run: mvn -B -DskipTests clean package
+      - name: Package artifact (skip tests)
+        working-directory: .
+        run: ./mvnw -B -DskipTests clean package
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -47,25 +49,13 @@ jobs:
           name: app-jar
           path: target/*.jar
 
-  optionally-publish:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-
-      # Exemplos de ações de publicação:
-      # - publicar imagem Docker para Docker Hub / ghcr
-      # - publicar jar para repositório Maven (Nexus, GitHub Packages)
-      - name: Example - Build and push Docker image (optional)
+      # Exemplo: publicar imagem Docker (opcional). Ative definindo DOCKER_PUBLISH=true e configurando secrets.
+      - name: Build and push Docker image (optional)
         if: env.DOCKER_PUBLISH == 'true'
         env:
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          docker build -t $DOCKERHUB_USER/myapp:${{ github.sha }} .
+          docker build -t $DOCKERHUB_USER/registro-horas:${{ github.sha }} .
           echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USER --password-stdin
-          docker push $DOCKERHUB_USER/myapp:${{ github.sha }}
+          docker push $DOCKERHUB_USER/registro-horas:${{ github.sha }}

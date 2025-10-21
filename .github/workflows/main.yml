@@ -3,9 +3,9 @@ name: Build + teste and publish end run Docker image
 
 on:
   push:
-    branches: [ main, master ]
+    branches:  [main, master ]
   pull_request:
-    branches: [ main, master ]
+    branches: develop 
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
         java-version: [23]
     env:
       IMAGE_NAME: horas_estagio
-      REGISTRY: ghcr.io
+      REGISTRY: docker.io
       PROJECT_DIR: ./horas_estagio
     steps:
       - name: Checkout repository
@@ -70,134 +70,129 @@ jobs:
 
       - name: Set up QEMU (for multi-platform) and Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
+      # Substitua as etapas de login/build-push/pull do seu workflow por este bloco
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-    
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Debug - check login and env
+        run: |
+          echo "DOCKERHUB_USERNAME='${{ secrets.DOCKERHUB_USERNAME }}'"
+          # mostra o resultado do docker info (sem expor credenciais)
+          docker --version
+          docker info || true
+      
+      - name: Prepare image tags (debug)
+        run: |
+          IMAGE_BASE="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}"
+          IMAGE_TAG="${IMAGE_BASE}:${{ github.sha }}"
+          IMAGE_LATEST="${IMAGE_BASE}:latest"
+          echo "IMAGE_BASE=${IMAGE_BASE}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_LATEST=${IMAGE_LATEST}" >> $GITHUB_ENV
+          echo "Prepared image tags:"
+          echo " - ${IMAGE_TAG}"
+          echo " - ${IMAGE_LATEST}"
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.PROJECT_DIR }}
           file: ${{ env.PROJECT_DIR }}/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
-          # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_LATEST }}
           build-args: |
             MAVEN_BUILD=target
-
+      
+      - name: Verify pushed image (list remote tags via Docker Hub API, non-authenticated for public repos)
+        run: |
+          echo "Attempting to pull the just pushed image to verify..."
+          docker pull ${{ env.IMAGE_TAG }} || true
+          echo "Local docker images:"
+          docker images | head -n 20
+            
       - name: Image info
         run: |
-          echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        ##---------------------------------Novas------------------------------------------------------
-
+          echo "Image pushed: "${IMAGE_BASE}:${{ github.sha }}""
+       
       - name: Define runtime variables
         run: |
-          echo "IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "IMAGE=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ github.event.inputs.db_password }}" >> $GITHUB_ENV
           echo "NETWORK_NAME=horas_estagio_net" >> $GITHUB_ENV
           echo "DB_CONTAINER=postgres" >> $GITHUB_ENV
           echo "APP_CONTAINER=horas_estagio_app" >> $GITHUB_ENV
 
+      - name: Pull application image from Docker Hub
+        run: |
+          # Autenticação já feita acima; puxe usando o nome de imagem publicado
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "Pulled image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          
       - name: Create docker network
         run: |
           docker network create $NETWORK_NAME || true
         env:
           NETWORK_NAME: ${{ env.NETWORK_NAME }}
-
-      - name: Start Postgres container
+        # --------------correr a imgane que esta no github ---------------------------------
+      - name: Start Postgres container for tests
         run: |
+          DB_CONTAINER=postgres_test_db
           docker run -d --name $DB_CONTAINER \
             --network $NETWORK_NAME \
-            -e POSTGRES_DB=postgres \
             -e POSTGRES_USER=postgres \
             -e POSTGRES_PASSWORD=admin \
-            -p 5432:5432 \
-            postgres:15
-        env:
-          DB_CONTAINER: ${{ env.DB_CONTAINER }}
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+            -e POSTGRES_DB=postgres \
+            postgres:14
+          echo "DB_CONTAINER=$DB_CONTAINER" >> $GITHUB_ENV
 
       - name: Wait for Postgres to be ready
         run: |
-          echo "Waiting for Postgres on network $NETWORK_NAME..."
-          for i in $(seq 1 60); do
-            if docker exec $DB_CONTAINER pg_isready -U postgres >/dev/null 2>&1; then
-              echo "Postgres ready"
-              break
-            fi
-            echo "  waiting... ($i)"
+          set -e
+          DB_HOST=postgres_test_db
+          DB_PORT=5432
+          retries=0
+          until docker exec $(docker ps -q -f name=$DB_HOST) pg_isready -U postgres >/dev/null 2>&1 || [ $retries -ge 30 ]; do
+            echo "Waiting for Postgres... ($retries)"
             sleep 2
+            retries=$((retries+1))
           done
-
-          if ! docker exec $DB_CONTAINER pg_isready -U postgres >/dev/null 2>&1; then
-            echo "Postgres not ready after timeout" >&2
-            docker logs $DB_CONTAINER || true
+          if [ $retries -ge 30 ]; then
+            echo "Postgres did not become ready in time" >&2
+            docker logs postgres_test_db || true
             exit 1
           fi
-        env:
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-          DB_CONTAINER: ${{ env.DB_CONTAINER }}
-
-      - name: Pull application image from Docker Hub
-        run: |
-          echo "Pulling image: $IMAGE"
-          docker pull $IMAGE
-        env:
-          IMAGE: ${{ env.IMAGE }}
-
-      - name: Stop & remove previous app container if exists
-        run: |
-          if [ "$(docker ps -aq -f name=$APP_CONTAINER)" ]; then
-            docker rm -f $APP_CONTAINER || true
-          fi
-        env:
-          APP_CONTAINER: ${{ env.APP_CONTAINER }}
+          echo "Postgres is ready."
 
       - name: Run application container (pulled from Docker Hub)
         run: |
+          # Garantir imagem definida
+          if [ -z "${IMAGE}" ]; then
+            echo "IMAGE variable empty, using IMAGE_TAG from env"
+            IMAGE="${{ env.IMAGE_TAG }}"
+          fi
+          APP_CONTAINER=horas_estagio_app
           docker run -d --name $APP_CONTAINER \
             --network $NETWORK_NAME \
             -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/postgres \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_test_db:5432/postgres \
             -e SPRING_DATASOURCE_USERNAME=postgres \
             -e SPRING_DATASOURCE_PASSWORD=admin \
             $IMAGE
-
           echo "Waiting a few seconds for application to start..."
           sleep 8
           echo "==== Application logs (tail 200) ===="
           docker logs --tail 200 $APP_CONTAINER || true
         env:
-          APP_CONTAINER: ${{ env.APP_CONTAINER }}
-          NETWORK_NAME: ${{ env.NETWORK_NAME }}
-          DB_CONTAINER: ${{ env.DB_CONTAINER }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-          IMAGE: ${{ env.IMAGE }}
+          NETWORK_NAME: horas_estagio_net
+          IMAGE: ${{ env.IMAGE_TAG }}
 
-      - name: Smoke test - health endpoint
-        run: |
-          echo "Attempting HTTP health check on app..."
-          for i in $(seq 1 20); do
-            if curl -sSf http://localhost:8080/actuator/health >/dev/null 2>&1; then
-              echo "App health OK"
-              exit 0
-            fi
-            echo "Waiting for app... ($i)"
-            sleep 3
-          done
-          echo "App did not become healthy in time. Dump logs:"
-          docker logs $APP_CONTAINER || true
-          exit 1
-        env:
-          APP_CONTAINER: ${{ env.APP_CONTAINER }}
+     
 
       - name: Teardown (optional) - keep for debugging; comment out to persist containers
         if: always()

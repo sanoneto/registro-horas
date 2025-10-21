@@ -363,7 +363,6 @@ class RegistroHorasControllerUnitTest {
     void shouldCreateRegisterWithMinimalData() {
         // Given
         RegisterRequest minimalRequest = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Tarefa",
                 LocalDateTime.now(),
@@ -430,7 +429,6 @@ class RegistroHorasControllerUnitTest {
         LocalDateTime novaDataFim = LocalDateTime.of(2024, 2, 1, 18, 0);
 
         RegisterRequest updateRequest = new RegisterRequest(
-                testUuid,
                 "admin",
                 "Nova descrição completa",
                 novaDataInicio,
@@ -572,7 +570,6 @@ class RegistroHorasControllerUnitTest {
         // Given
         UUID providedUuid = UUID.randomUUID();
         RegisterRequest requestWithUuid = new RegisterRequest(
-                providedUuid,
                 "neto",
                 "Tarefa",
                 LocalDateTime.now(),

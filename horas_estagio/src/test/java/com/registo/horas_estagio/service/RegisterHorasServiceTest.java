@@ -108,7 +108,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursAutomatically() {
         // Given
         RegisterRequest requestSemHoras = new RegisterRequest(
-                UUID.randomUUID() ,
+
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -296,7 +296,7 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursWhenHoursIsZero() {
         // Given
         RegisterRequest requestComZeroHoras = new RegisterRequest(
-                UUID.randomUUID(),
+
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -321,7 +321,6 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursWhenHoursIsNegative() {
         // Given
         RegisterRequest requestComHorasNegativas = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -346,7 +345,6 @@ class RegisterHorasServiceTest {
     void shouldThrowExceptionWhenEndDateIsBeforeStartDate() {
         // Given
         RegisterRequest requestComDatasInvalidas = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 18, 0),
@@ -371,7 +369,6 @@ class RegisterHorasServiceTest {
     void shouldUseProvidedHoursWhenGreaterThanZero() {
         // Given
         RegisterRequest requestComHorasFornecidas = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -417,7 +414,6 @@ class RegisterHorasServiceTest {
                 .build();
 
         RegisterRequest requestComNovoEstagiario = new RegisterRequest(
-                UUID.randomUUID(),
                 "admin", // Estagiário diferente
                 "Nova descrição",
                 LocalDateTime.of(2024, 1, 16, 9, 0),
@@ -447,7 +443,6 @@ class RegisterHorasServiceTest {
         // Given
          UUID uuid =UUID.randomUUID();
         RegisterRequest requestComZeroHoras = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Descrição atualizada",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -523,7 +518,6 @@ class RegisterHorasServiceTest {
     void shouldCalculateHoursGreaterThan24Correctly() {
         // Given
         RegisterRequest requestComMuitasHoras = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Desenvolvimento",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -549,7 +543,6 @@ class RegisterHorasServiceTest {
         // Given
          UUID uuid =  UUID.randomUUID();
         RegisterRequest requestMesmoEstagiario = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto", // Mesmo estagiário
                 "Nova descrição",
                 LocalDateTime.of(2024, 1, 16, 9, 0),
@@ -577,7 +570,6 @@ class RegisterHorasServiceTest {
         // Given
         UUID uuid =  UUID.randomUUID();
         RegisterRequest requestComHoras = new RegisterRequest(
-                UUID.randomUUID(),
                 "neto",
                 "Descrição",
                 LocalDateTime.of(2024, 1, 15, 9, 0),
@@ -648,7 +640,6 @@ class RegisterHorasServiceTest {
         // Given
         UUID uuid =  UUID.randomUUID();
         RegisterRequest requestComUsuarioInexistente = new RegisterRequest(
-                UUID.randomUUID(),
                 "inexistente",
                 "Descrição",
                 LocalDateTime.of(2024, 1, 15, 9, 0),

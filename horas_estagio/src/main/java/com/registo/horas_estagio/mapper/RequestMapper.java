@@ -19,7 +19,7 @@ public interface RequestMapper {
     Usuario mapToRegisterHoras(UserCredentialsRequest userCredentialsRequest);
 
 
-    @Mapping(target = "publicId", source = "publicId")
+
     @Mapping(target = "estagiario", source = "estagiario")
     @Mapping(target = "descricao", source = "descricao")
     @Mapping(target = "dataInicio", source = "dataInicio")

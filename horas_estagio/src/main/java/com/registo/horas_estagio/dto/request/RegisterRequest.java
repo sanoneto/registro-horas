@@ -12,7 +12,6 @@ import java.util.UUID;
 @Schema(description = "Request para registrar horas")
 public record RegisterRequest(
 
-        UUID publicId,
 
         @NotBlank(message = "O  nome estagiario é obrigatório")
         @Size(min = 2, max = 50, message = "Nome deve ter entre 2 e 50 caracteres")

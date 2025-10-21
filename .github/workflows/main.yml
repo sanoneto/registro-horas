@@ -21,7 +21,7 @@ jobs:
         java-version: [23]
     env:
       IMAGE_NAME: horas_estagio
-      REGISTRY: docker.io
+      REGISTRY: ghcr.io
       PROJECT_DIR: ./horas_estagio
     steps:
       - name: Checkout repository
@@ -85,7 +85,12 @@ jobs:
           file: ${{ env.PROJECT_DIR }}/Dockerfile
           push: true
           # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
-          tags: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            MAVEN_BUILD=target
+
       - name: Image info
         run: |
           echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"

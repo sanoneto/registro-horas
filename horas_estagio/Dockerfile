@@ -16,10 +16,13 @@ EXPOSE 8080
 # Variáveis de ambiente com valores padrão (podem ser sobrescritas em tempo de execução)
 ENV SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/postgres"
 ENV SPRING_DATASOURCE_USERNAME="postgres"
-ENV SPRING_DATASOURCE_PASSWORD="admin"
+ENV SPRING_DATASOURCE_PASSWORD=""
 
 # Opções de JVM recomendadas (ajuste conforme necessidade)
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseContainerSupport"
 
 # Comando para rodar o jar
-ENTRYPOINT [ "/bin/sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar" ]
+# Suporte a Docker Secrets / Kubernetes Secrets:
+# Se existir o ficheiro /run/secrets/db_password, usamos esse conteúdo como password.
+# Caso contrário, espera-se que a password seja passada em runtime (docker run -e SPRING_DATASOURCE_PASSWORD=...)
+ENTRYPOINT ["/bin/sh", "-c", "if [ -f /run/secrets/db_password ]; then export SPRING_DATASOURCE_PASSWORD=$(cat /run/secrets/db_password); fi; exec java $JAVA_OPTS -jar /app/app.jar"]

@@ -21,7 +21,7 @@ jobs:
         java-version: [23]
     env:
       IMAGE_NAME: horas_estagio
-      REGISTRY: ghcr.io
+      REGISTRY: docker.io
       PROJECT_DIR: ./horas_estagio
     steps:
       - name: Checkout repository
@@ -74,7 +74,7 @@ jobs:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: docker.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}    # <-- deve existir no repo Secrets
           password: ${{ secrets.DOCKERHUB_TOKEN }}       # <-- token gerado no Docker Hub (PAT)
     
@@ -86,14 +86,14 @@ jobs:
           push: true
           # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: |
             MAVEN_BUILD=target
 
       - name: Image info
         run: |
-          echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Image pushed: ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
        
       - name: Define runtime variables
         run: |
@@ -106,8 +106,8 @@ jobs:
       - name: Pull application image from Docker Hub
         run: |
           # Autenticação já feita acima; puxe usando o nome de imagem publicado
-          docker pull ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          echo "Pulled image: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "Pulled image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           
       - name: Create docker network
         run: |

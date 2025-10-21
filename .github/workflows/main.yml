@@ -1,0 +1,174 @@
+# language: yaml
+name: Build + teste and publish end run Docker image
+
+on:
+  push:
+    branches:  develop
+  pull_request:
+    branches: develop 
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write   # necessário apenas se usar OIDC para autenticação externa
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [23]
+    env:
+      IMAGE_NAME: horas_estagio
+      REGISTRY: docker.io
+      PROJECT_DIR: ./horas_estagio
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: 'maven'
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+            
+       # Trabalhar na subpasta horas_estagio onde está o pom.xml e o mvnw
+      - name: Grant execute permission for mvnw
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x ./mvnw
+        
+      - name: Build (compile + tests)
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: mvn -B -U clean package
+
+      - name: Package artifact (skip tests)
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw -B -DskipTests clean package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: horas_estagio/target/*.jar
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+
+      - name: Set up QEMU (for multi-platform) and Buildx
+        uses: docker/setup-buildx-action@v3
+      # Substitua as etapas de login/build-push/pull do seu workflow por este bloco
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Debug - check login and env
+        run: |
+          echo "DOCKERHUB_USERNAME='${{ secrets.DOCKERHUB_USERNAME }}'"
+          # mostra o resultado do docker info (sem expor credenciais)
+          docker --version
+          docker info || true
+      
+      - name: Prepare image tags (debug)
+        run: |
+          IMAGE_BASE="${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}"
+          IMAGE_TAG="${IMAGE_BASE}:${{ github.sha }}"
+          IMAGE_LATEST="${IMAGE_BASE}:latest"
+          echo "IMAGE_BASE=${IMAGE_BASE}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_LATEST=${IMAGE_LATEST}" >> $GITHUB_ENV
+          echo "Prepared image tags:"
+          echo " - ${IMAGE_TAG}"
+          echo " - ${IMAGE_LATEST}"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.PROJECT_DIR }}
+          file: ${{ env.PROJECT_DIR }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_LATEST }}
+          build-args: |
+            MAVEN_BUILD=target
+      
+      - name: Verify pushed image (list remote tags via Docker Hub API, non-authenticated for public repos)
+        run: |
+          echo "Attempting to pull the just pushed image to verify..."
+          docker pull ${{ env.IMAGE_TAG }} || true
+          echo "Local docker images:"
+          docker images | head -n 20
+            
+      - name: Image info
+        run: |
+          echo "Image pushed: "${IMAGE_BASE}:${{ github.sha }}""
+       
+      - name: Define runtime variables
+        run: |
+          echo "IMAGE=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ github.event.inputs.db_password }}" >> $GITHUB_ENV
+          echo "NETWORK_NAME=horas_estagio_net" >> $GITHUB_ENV
+          echo "DB_CONTAINER=postgres" >> $GITHUB_ENV
+          echo "APP_CONTAINER=horas_estagio_app" >> $GITHUB_ENV
+
+      - name: Pull application image from Docker Hub
+        run: |
+          # Autenticação já feita acima; puxe usando o nome de imagem publicado
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "Pulled image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          
+      - name: Create docker network
+        run: |
+          docker network create $NETWORK_NAME || true
+        env:
+          NETWORK_NAME: ${{ env.NETWORK_NAME }}
+
+      - name: Run application container (pulled from Docker Hub)
+        run: |
+          docker run -d --name $APP_CONTAINER \
+            --network $NETWORK_NAME \
+            -p 8080:8080 \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/postgres \
+            -e SPRING_DATASOURCE_USERNAME=postgres \
+            -e SPRING_DATASOURCE_PASSWORD=admin \
+            $IMAGE
+
+          echo "Waiting a few seconds for application to start..."
+          sleep 8
+          echo "==== Application logs (tail 200) ===="
+          docker logs --tail 200 $APP_CONTAINER || true
+        env:
+          APP_CONTAINER: ${{ env.APP_CONTAINER }}
+          NETWORK_NAME: ${{ env.NETWORK_NAME }}
+          DB_CONTAINER: ${{ env.DB_CONTAINER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          IMAGE: ${{ env.IMAGE }}
+
+      - name: Teardown (optional) - keep for debugging; comment out to persist containers
+        if: always()
+        run: |
+          echo "Stopping and removing containers and network (cleanup)..."
+          docker rm -f $APP_CONTAINER || true
+          docker rm -f $DB_CONTAINER || true
+          docker network rm $NETWORK_NAME || true
+        env:
+          APP_CONTAINER: ${{ env.APP_CONTAINER }}
+          DB_CONTAINER: ${{ env.DB_CONTAINER }}
+          NETWORK_NAME: ${{ env.NETWORK_NAME }}

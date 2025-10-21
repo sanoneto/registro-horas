@@ -18,7 +18,6 @@ public class ObjectUtils {
 
     public static RegisterRequest createDefaultRequest() {
         return new RegisterRequest(
-                UUID.randomUUID(),
                 ESTAGIARIO_PADRAO,
                 DESCRICAO_PADRAO,
                 DATA_INICIO_PADRAO,

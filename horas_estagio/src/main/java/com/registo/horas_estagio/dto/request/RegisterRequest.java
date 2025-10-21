@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Schema(description = "Request para registrar horas")
 public record RegisterRequest(
@@ -21,7 +20,7 @@ public record RegisterRequest(
         @Schema(
                 description = "Descrição da atividade",
                 example = "Desenvolvimento de API REST",
-                required = true
+                requiredMode = Schema.RequiredMode.REQUIRED
         )
         @NotBlank(message = "O primeiro nome é obrigatório")
         @Size(min = 2, max = 50, message = "Nome deve ter entre 2 e 50 caracteres")
@@ -30,7 +29,7 @@ public record RegisterRequest(
         @Schema(
                 description = "Data e hora de início",
                 example = "2024-01-15T09:00:00",
-                required = true,
+                requiredMode = Schema.RequiredMode.REQUIRED,
                 type = "string",
                 format = "date-time"
         )
@@ -39,7 +38,7 @@ public record RegisterRequest(
         @Schema(
                 description = "Data e hora de término",
                 example = "2024-01-15T18:00:00",
-                required = true,
+                requiredMode = Schema.RequiredMode.REQUIRED,
                 type = "string",
                 format = "date-time"
         )
@@ -48,7 +47,7 @@ public record RegisterRequest(
         @Schema(
                 description = "Data e hora trabalhadas",
                 example = "4",
-                required = true,
+                requiredMode = Schema.RequiredMode.REQUIRED,
                 type = "int"
         )
         int horasTrabalhadas

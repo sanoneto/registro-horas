@@ -21,7 +21,7 @@ jobs:
         java-version: [23]
     env:
       IMAGE_NAME: horas_estagio
-      REGISTRY: ghcr.io
+      REGISTRY: docker.io
       PROJECT_DIR: ./horas_estagio
     steps:
       - name: Checkout repository
@@ -75,8 +75,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
     
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -85,7 +85,7 @@ jobs:
           file: ${{ env.PROJECT_DIR }}/Dockerfile
           push: true
           # monta dinamicamente o nome do repositório usando github.repository_owner e IMAGE_NAME
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       - name: Image info
         run: |
           echo "Image pushed: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
@@ -100,8 +100,9 @@ jobs:
 
       - name: Pull application image from Docker Hub
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          echo "Pulling image: $IMAGE"
+          # Autenticação já feita acima; puxe usando o nome de imagem publicado
+          docker pull ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "Pulled image: ${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           
       - name: Create docker network
         run: |

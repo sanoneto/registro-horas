@@ -10,6 +10,6 @@ public record RegisterResponse(
         String descricao,
         LocalDateTime dataInicio,
         LocalDateTime dataFim,
-     int horasTrabalhadas
+        double horasTrabalhadas
 ) {
 }

@@ -1,0 +1,22 @@
+# language: yaml
+spring:
+  cloud:
+    vault:
+      host: ${VAULT_HOST:127.0.0.1}
+      port: ${VAULT_PORT:8200}
+      scheme: ${VAULT_SCHEME:http}
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: horasapp
+        application-name: registo-horas
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:}
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: ${EXPIRATION:} # 24 horas em millisegundos

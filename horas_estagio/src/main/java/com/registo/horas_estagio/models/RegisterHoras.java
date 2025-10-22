@@ -39,7 +39,7 @@ public class RegisterHoras {
     private LocalDateTime dataFim;
 
     @Column(nullable = false)
-    private int horasTrabalhadas;
+    private double horasTrabalhadas;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)

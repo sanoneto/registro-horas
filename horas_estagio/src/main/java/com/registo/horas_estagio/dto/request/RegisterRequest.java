@@ -35,6 +35,7 @@ public record RegisterRequest(
         )
         @NotNull(message = "Data início é obrigatória")
         LocalDateTime dataInicio,
+
         @Schema(
                 description = "Data e hora de término",
                 example = "2024-01-15T18:00:00",
@@ -44,13 +45,14 @@ public record RegisterRequest(
         )
         @NotNull(message = "Data fim é obrigatória")
         LocalDateTime dataFim,
+
         @Schema(
                 description = "Data e hora trabalhadas",
-                example = "4",
+                example = "2.4",
                 requiredMode = Schema.RequiredMode.REQUIRED,
-                type = "int"
+                type = "double"
         )
-        int horasTrabalhadas
+        double horasTrabalhadas
 
 ) {
 }

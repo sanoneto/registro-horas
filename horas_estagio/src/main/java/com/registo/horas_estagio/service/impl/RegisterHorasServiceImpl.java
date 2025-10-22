@@ -43,7 +43,7 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         // Calcula horas automaticamente se não fornecido
         if (shouldCalculateHours(request)) {
-            int horasCalculadas = calculateHoursBetween(request.dataInicio(), request.dataFim());
+            double horasCalculadas = calculateHoursBetween(request.dataInicio(), request.dataFim());
             registerHoras.setHorasTrabalhadas(horasCalculadas);
             log.debug("Horas calculadas automaticamente: {} horas", horasCalculadas);
         }
@@ -159,8 +159,8 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         // 4. Recalcular horas se necessário
         if (shouldCalculateHours(request)) {
-            int horasCalculadas = calculateHoursBetween(request.dataInicio(), request.dataFim());
-            registerHoras.setHorasTrabalhadas(horasCalculadas);
+            double horasCalculadas = calculateHoursBetween(request.dataInicio(), request.dataFim());
+            registerHoras.setHorasTrabalhadas((int) horasCalculadas);
             log.debug("Horas recalculadas: {}", horasCalculadas);
         } else {
             registerHoras.setHorasTrabalhadas(request.horasTrabalhadas());
@@ -210,19 +210,19 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
     /**
      * Calcula as horas trabalhadas entre duas datas
      */
-    private Integer calculateHoursBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
+    private double calculateHoursBetween(LocalDateTime dataInicio, LocalDateTime dataFim) {
         if (dataFim.isBefore(dataInicio)) {
             log.error("Data fim ({}) é anterior à data início ({})", dataFim, dataInicio);
             throw new RuntimeException("Data fim não pode ser anterior à data início");
         }
 
         Duration duration = Duration.between(dataInicio, dataFim);
-        long horas = duration.toHours();
+        double horas = duration.toHours()+duration.toMinutes()%60;
 
         if (horas > 24) {
             log.warn("Horas calculadas excedem 24 horas: {} horas", horas);
         }
 
-        return Math.toIntExact(horas);
+        return horas;
     }
 }

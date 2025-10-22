@@ -70,4 +70,14 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> BadCredentialsException(Exception e) {
+        log.warn("Falha de autenticação para usuário {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                "Falha de autenticação para usuário: " + e.getMessage(),
+                HttpStatus.UNAUTHORIZED.value()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 }

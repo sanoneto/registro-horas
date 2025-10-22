@@ -3,6 +3,7 @@ name: Build and push Docker image
 on:
   push:
     branches: [ "develop" ]
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -40,6 +41,7 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # Trabalhar na subpasta horas_estagio onde está o pom.xml e o mvnw
       - name: Grant execute permission for mvnw
         working-directory: ${{ env.PROJECT_DIR }}
@@ -57,13 +59,13 @@ jobs:
           build-args: |
             MAVEN_BUILD=target
 
-      - name: Verify pushed image (list remote tags via Docker Hub API, non-authenticated for public repos)
+      - name: Verify pushed image (attempt pull)
         run: |
           echo "Attempting to pull the just pushed image to verify..."
-          docker pull ${{ env.IMAGE_TAG }} || true
+          docker pull "${IMAGE_TAG}" || true
           echo "Local docker images:"
           docker images | head -n 20
 
       - name: Image info
         run: |
-          echo "Image pushed: "${IMAGE_BASE}:${{ github.sha }}""
+          echo "Image pushed: ${IMAGE_BASE}:${{ github.sha }}"

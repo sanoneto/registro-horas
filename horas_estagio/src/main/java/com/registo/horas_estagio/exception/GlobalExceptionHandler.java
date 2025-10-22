@@ -1,7 +1,6 @@
 package com.registo.horas_estagio.exception;
 
 import com.registo.horas_estagio.dto.response.ErrorResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

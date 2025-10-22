@@ -72,22 +72,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ExpiredJwtException eje) {
             // Token expirado: devolve 401 com corpo JSON
             log.warn("Token JWT expirado para request {}: {}", request.getRequestURI(), eje.getMessage());
-            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token JWT expirado");
+            writeErrorResponse(response, "Token JWT expirado");
         } catch (JwtException | IllegalArgumentException e) {
             // Token mal formado / assinatura inválida / outros problemas de JWT
             log.warn("Token JWT inválido para request {}: {}", request.getRequestURI(), e.getMessage());
-            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token JWT inválido");
+            writeErrorResponse(response, "Token JWT inválido");
         } catch (Exception e) {
             // Erro inesperado: log e devolver 401 por segurança
             log.error("Erro inesperado ao validar token JWT: {}", e.getMessage(), e);
-            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Erro ao processar autenticação");
+            writeErrorResponse(response, "Erro ao processar autenticação");
         }
     }
 
-    private void writeErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
+    private void writeErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        ErrorResponse err = new ErrorResponse(message, status);
+        ErrorResponse err = new ErrorResponse(message, HttpServletResponse.SC_UNAUTHORIZED);
         byte[] json = objectMapper.writeValueAsString(err).getBytes(StandardCharsets.UTF_8);
         response.getOutputStream().write(json);
     }

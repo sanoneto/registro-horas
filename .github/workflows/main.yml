@@ -1,5 +1,5 @@
 # language: yaml
-name: Build + teste and publish end run Docker image
+name: rum application registo_horas image
 
 on:
   push:

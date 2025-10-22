@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,11 +73,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> BadCredentialsException(Exception e) {
         log.warn("Falha de autenticação para usuário {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 "Falha de autenticação para usuário: " + e.getMessage(),
+                HttpStatus.UNAUTHORIZED.value()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ErrorResponse> ResourceAccessException(Exception e) {
+        log.warn(" Unsupported or unrecognized SSL message: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                " Unsupported or unrecognized SSL message: " + e.getMessage(),
                 HttpStatus.UNAUTHORIZED.value()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);

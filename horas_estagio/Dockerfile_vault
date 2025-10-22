@@ -1,0 +1,15 @@
+# Dockerfile
+FROM vault:latest
+
+# Copia um arquivo de configuração (opcional)
+COPY config.hcl /vault/config/config.hcl
+
+# Cria diretório para dados em modo dev/standalone (opcional)
+VOLUME /vault/data
+
+# Porta padrão do Vault
+EXPOSE 8200
+
+# Mantém o entrypoint padrão da imagem oficial
+# (a imagem oficial já tem ENTRYPOINT/ CMD configurados para executar o vault)
+

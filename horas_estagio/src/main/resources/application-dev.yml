@@ -6,6 +6,13 @@ spring:
     open-in-view: true
   application:
     name: registo-horas
+  # Configuração do Vault: ajuste conforme seu ambiente.
+  cloud:
+    vault:
+      # Se o seu Vault NÃO usar TLS (modo dev), use scheme: http
+      host: localhost
+      port: 8200
+      scheme: http
 
 # Configuração do Flyway (migrations em src/main/resources/db/migration)
   flyway:

@@ -1,6 +1,7 @@
 package com.registo.horas_estagio.exception;
 
 import com.registo.horas_estagio.dto.response.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -87,9 +88,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> ResourceAccessException(Exception e) {
         log.warn(" Unsupported or unrecognized SSL message: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
-                " Unsupported or unrecognized SSL message: " + e.getMessage(),
-                HttpStatus.UNAUTHORIZED.value()
+                "Problema de conectividade com o Vault: " + e.getMessage(),
+                HttpStatus.SERVICE_UNAVAILABLE.value()
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
+
 }

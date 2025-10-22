@@ -12,3 +12,4 @@ EXPOSE 8200
 
 # Mantém o entrypoint padrão da imagem oficial
 # (a imagem oficial já tem ENTRYPOINT/ CMD configurados para executar o vault)
+

@@ -1,5 +1,5 @@
 # Dockerfile
-FROM vault:latest
+FROM hashicorp/vault:1.13.3
 
 # Copia um arquivo de configuração (opcional)
 COPY config.hcl /vault/config/config.hcl

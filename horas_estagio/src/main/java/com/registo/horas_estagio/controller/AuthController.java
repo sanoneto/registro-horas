@@ -77,8 +77,8 @@ public class AuthController {
 
         // Gera novo token e salva
         String token = jwtTokenUtil.generateToken(username);
-        java.time.Instant issuedAt = java.time.Instant.now();
-        java.time.Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
         jwtTokenService.saveToken(token, username, issuedAt, expiresAt);
 
         log.info("Login realizado com sucesso para: {} com o token {}", username, token);

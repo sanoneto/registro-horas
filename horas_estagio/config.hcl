@@ -5,7 +5,7 @@ listener "tcp" {
 }
 
 storage "file" {
-  path = "/vault/data"
+  path = "./vault/data"
 }
 
 ui = true

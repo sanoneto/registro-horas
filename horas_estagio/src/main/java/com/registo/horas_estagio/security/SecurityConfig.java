@@ -70,7 +70,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"error\": \"Acesso negado\", \"message\": \"Você não tem permissão para acessar este recurso\"}");
                         })
                 )
-                // .authenticationProvider(authenticationProvider())
+                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

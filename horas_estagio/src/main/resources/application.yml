@@ -18,6 +18,7 @@ spring:
       host: localhost
       port: 8200
       scheme: http
+      enabled: false
 # Configuração do Flyway (migrations em src/main/resources/db/migration)
   flyway:
     enabled: true

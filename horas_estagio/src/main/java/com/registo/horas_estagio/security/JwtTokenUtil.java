@@ -56,6 +56,11 @@ public class JwtTokenUtil {
             return false;
         }
     }
+    // ... existing code ...
+    // Novo método exposto para obter a expiração em milissegundos
+    public long getExpirationMillis() {
+        return expiration != null ? expiration : 0L;
+    }
 
 }
 

@@ -131,7 +131,7 @@ jobs:
       - name: Pull application image from Docker Hub
         run: |
           # Autenticação já feita acima; puxe usando o nome de imagem publicado
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker pull ${{env.REGISTRY}}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           echo "Pulled image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           
       - name: Create docker network

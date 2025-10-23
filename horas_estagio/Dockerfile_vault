@@ -2,7 +2,7 @@
 FROM hashicorp/vault:latest
 
 # Copia um arquivo de configuração (opcional)
-COPY config.hcl /vault/config/config.hcl
+COPY vault/data/config.hcl /vault/config/config.hcl
 
 # Cria diretório para dados em modo dev/standalone (opcional)
 VOLUME /vault/data

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @RestController
@@ -105,8 +106,8 @@ public class AuthController {
         // Gera token automaticamente após registro (autologin)
         String token = jwtTokenUtil.generateToken(usuario.getUsername());
 
-        java.time.Instant issuedAt = java.time.Instant.now();
-        java.time.Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
 
         jwtTokenService.saveToken(token, usuario.getUsername(), issuedAt, expiresAt);
 

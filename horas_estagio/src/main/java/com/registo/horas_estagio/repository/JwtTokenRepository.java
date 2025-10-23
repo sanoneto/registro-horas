@@ -7,6 +7,5 @@ import java.util.Optional;
 
 public interface JwtTokenRepository extends JpaRepository<JwtToken, Long> {
     Optional<JwtToken> findByToken(String token);
-    // Novo: busca o token mais recente para um username (se houver)
     Optional<JwtToken> findTopByUsernameOrderByIssuedAtDesc(String username);
 }

@@ -17,14 +17,14 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     private final JwtTokenRepository repository;
 
     @Override
-    public JwtToken saveToken(String token, String username, Instant issuedAt, Instant expiresAt) {
+    public void saveToken(String token, String username, Instant issuedAt, Instant expiresAt) {
         JwtToken jwt = new JwtToken();
         jwt.setToken(token);
         jwt.setUsername(username);
         jwt.setIssuedAt(issuedAt);
         jwt.setExpiresAt(expiresAt);
         jwt.setRevoked(false);
-        return repository.save(jwt);
+        repository.save(jwt);
     }
 
     @Override

@@ -6,9 +6,12 @@ import java.time.Instant;
 import java.util.Optional;
 
 public interface JwtTokenService {
-    JwtToken saveToken(String token, String username, Instant issuedAt, Instant expiresAt);
+    void saveToken(String token, String username, Instant issuedAt, Instant expiresAt);
+
     Optional<JwtToken> findByToken(String token);
+
     void revokeToken(String token);
+
     boolean isTokenActive(String token);
 
     // Novo: obtém o token mais recente do usuário (se existir)
@@ -18,5 +21,6 @@ public interface JwtTokenService {
     default boolean isExpired(JwtToken jwtToken) {
         return jwtToken == null || jwtToken.getExpiresAt().isBefore(Instant.now());
     }
+
     Optional<JwtToken> getReusableTokenForUser(String username);
 }

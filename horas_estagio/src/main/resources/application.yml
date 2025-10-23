@@ -34,7 +34,6 @@ management:
     health:
       show-details: never   # alterar para 'always' ou 'when_authorized' conforme necessidade
 
-
 server:
   port: 8080
 

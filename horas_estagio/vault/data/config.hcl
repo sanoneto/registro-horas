@@ -1,6 +1,6 @@
 # config.hcl
 listener "tcp" {
-  address     = "0.0.0.0:8202"
+  address     = "127.0.0.1:8202"
   tls_disable = "true"  # Só para desenvolvimento; não usar em produção
 }
 

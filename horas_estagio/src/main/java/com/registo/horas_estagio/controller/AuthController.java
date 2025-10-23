@@ -6,8 +6,10 @@ import com.registo.horas_estagio.dto.request.UserCredentialsRequest;
 
 import com.registo.horas_estagio.dto.response.LoginResponse;
 import com.registo.horas_estagio.mapper.RequestMapper;
+import com.registo.horas_estagio.models.JwtToken;
 import com.registo.horas_estagio.models.Usuario;
 import com.registo.horas_estagio.security.JwtTokenUtil;
+import com.registo.horas_estagio.service.JwtTokenService;
 import com.registo.horas_estagio.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -37,6 +42,7 @@ public class AuthController {
     private final JwtTokenUtil jwtTokenUtil;
     private final UsuarioService usuarioService;
     private final RequestMapper requestMapper;
+    private final JwtTokenService jwtTokenService;
 
     @Operation(
             summary = "Realizar login na aplicaçao",
@@ -60,9 +66,22 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password())
         );
 
-        String token = jwtTokenUtil.generateToken(authentication.getName());
-        log.info("Login realizado com sucesso para: {}", loginRequest.username());
-        log.info("Token gerado: {}", token);
+        String username = authentication.getName();
+       // Tenta obter um token reutilizável (não revogado e não expirado)
+               Optional<JwtToken> latestTokenOpt = jwtTokenService.getReusableTokenForUser(username);
+               if (latestTokenOpt.isPresent()) {
+                   JwtToken latestToken = latestTokenOpt.get();
+                   log.info("Reutilizando token existente para usuário {}", username);
+                   return ResponseEntity.ok().body(new LoginResponse("Login realizado com sucesso", latestToken.getToken()));
+                }
+
+        // Gera novo token e salva
+        String token = jwtTokenUtil.generateToken(username);
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
+        jwtTokenService.saveToken(token, username, issuedAt, expiresAt);
+
+        log.info("Login realizado com sucesso para: {} com o token {}", username, token);
         return ResponseEntity.ok().body(new LoginResponse("Login realizado com sucesso", token));
     }
     /**
@@ -83,7 +102,17 @@ public class AuthController {
         }
         Usuario usuario = requestMapper.mapToRegisterHoras(userCredentialsRequest);
         usuarioService.registrarUsuario(usuario);
-        return ResponseEntity.ok(usuario.getUsername() + " registrado com sucesso!");
+
+        // Gera token automaticamente após registro (autologin)
+        String token = jwtTokenUtil.generateToken(usuario.getUsername());
+
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusMillis(jwtTokenUtil.getExpirationMillis());
+
+        jwtTokenService.saveToken(token, usuario.getUsername(), issuedAt, expiresAt);
+
+        // Retorna token no corpo usando o mesmo DTO LoginResponse
+        return ResponseEntity.ok(new LoginResponse(usuario.getUsername() + " registrado com sucesso", token));
     }
 
 }

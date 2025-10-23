@@ -46,6 +46,11 @@ public class Usuario {
     @ToString.Exclude  // SOLUÇÃO: Exclui do toString() para evitar ciclo
     private List<RegisterHoras> registros = new ArrayList<>();
 
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    @ToString.Exclude  // SOLUÇÃO: Exclui do toString() para evitar ciclo
+    private List<JwtToken> jwtToken = new ArrayList<>();
+
     /**
             * Setter customizado para username.
             * Normaliza automaticamente para lowercase.

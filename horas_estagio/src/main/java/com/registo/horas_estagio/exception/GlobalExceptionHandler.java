@@ -92,5 +92,13 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
-
+    @ExceptionHandler(java.net.ConnectException.class)
+    public ResponseEntity<ErrorResponse> handleConnectException(java.net.ConnectException e) {
+        log.warn("Falha de conexão: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                "Serviço remoto indisponível: " + e.getMessage(),
+                HttpStatus.SERVICE_UNAVAILABLE.value()
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
 }

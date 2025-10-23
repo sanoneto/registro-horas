@@ -1,11 +1,9 @@
 package com.registo.horas_estagio.models;
 
 // language: java
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,9 +21,6 @@ public class JwtToken {
     @Column(name = "token", nullable = false, length = 2000)
     private String token;
 
-    @Column(name = "username", nullable = false)
-    private String username;
-
     @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
 
@@ -38,12 +33,14 @@ public class JwtToken {
     @Column(name = "public_id", nullable = false, unique = true)
     private UUID publicId ;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @JsonBackReference
+    @ToString.Exclude  // ⭐ SOLUÇÃO: Exclui do toString() para evitar ciclo
+    private Usuario usuario;
+
     @PrePersist
-    @PreUpdate
-    private void normalizeUsername() {
-        if (this.username != null && !this.username.equals(this.username.toLowerCase().trim())) {
-            this.username = this.username.trim().toLowerCase();
-        }
+    private void ensurePublicId() {
         if (this.publicId == null) {
             this.publicId = UUID.randomUUID();
         }

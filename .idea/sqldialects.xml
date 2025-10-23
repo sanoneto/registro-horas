@@ -2,6 +2,5 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/horas_estagio/src/main/resources/db/migration/V1__create_tables.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/horas_estagio/src/main/resources/db/migration/V3__create_jwt_token_table.sql" dialect="PostgreSQL" />
   </component>
 </project>

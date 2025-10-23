@@ -14,9 +14,6 @@ public interface JwtTokenService {
 
     boolean isTokenActive(String token);
 
-    // Novo: obtém o token mais recente do usuário (se existir)
-    Optional<JwtToken> findLatestTokenByUsername(String username);
-
     // (opcionalmente) utilitário para checar expirado
     default boolean isExpired(JwtToken jwtToken) {
         return jwtToken == null || jwtToken.getExpiresAt().isBefore(Instant.now());

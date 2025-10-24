@@ -17,11 +17,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -157,20 +159,80 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
             updateEstagiario(registerHoras, request.estagiario());
         }
 
-        // 4. Recalcular horas se necessário
         if (shouldCalculateHours(request)) {
             double horasCalculadas = calculateHoursBetween(request.dataInicio(), request.dataFim());
-            registerHoras.setHorasTrabalhadas((int) horasCalculadas);
+            // Salvar a representação decimal correta (ex.: 2.5 para 2h30m)
+            registerHoras.setHorasTrabalhadas(horasCalculadas);
             log.debug("Horas recalculadas: {}", horasCalculadas);
         } else {
             registerHoras.setHorasTrabalhadas(request.horasTrabalhadas());
         }
-
         // 5. Salvar alterações
         RegisterHoras updated = registroHorasRepository.save(registerHoras);
         log.info("Registro {} atualizado com sucesso", publicId);
 
         return requestMapper.mapRegisterResponse(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Integer, Double> getWeeklyHoursForYear(int year, String estagiario) {
+        // Determina o número máximo de semanas no ano (52 ou 53)
+        LocalDate dec28 = LocalDate.of(year, 12, 28); // garante semana ISO final do ano
+        int maxWeek = dec28.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+
+        Map<Integer, Double> result = new HashMap<>();
+
+        for (int week = 1; week <= maxWeek; week++) {
+            // Calcula o primeiro dia da semana (segunda-feira) da semana ISO
+            LocalDate startDate = LocalDate
+                    .of(year, 1, 4)
+                    .with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, week)
+                    .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+            LocalDateTime start = startDate.atStartOfDay();
+            LocalDateTime end = startDate.plusDays(6).atTime(23, 59, 59);
+
+            List<RegisterHoras> registros;
+            if (estagiario != null && !estagiario.isBlank()) {
+                registros = registroHorasRepository.findByEstagiarioAndDataInicioBetween(estagiario.toLowerCase().trim(), start, end);
+            } else {
+                registros = registroHorasRepository.findByDataInicioBetween(start, end);
+            }
+
+            double total = registros.stream()
+                    .mapToDouble(RegisterHoras::getHorasTrabalhadas)
+                    .sum();
+
+            result.put(week, total);
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public double getTotalHoursForUser(String estagiario) {
+        if (estagiario == null || estagiario.isBlank()) {
+            // Se não for fornecido estagiário, devolve 0 (poderia também lançar erro)
+            return 0.0;
+        }
+        String normalized = estagiario.toLowerCase().trim();
+        List<RegisterHoras> registros = registroHorasRepository.findByEstagiario(normalized);
+        return registros.stream()
+                .mapToDouble(RegisterHoras::getHorasTrabalhadas)
+                .sum();
+    }
+
+    // Utilitário para formatar decimal para "H.mm" (ex.: 2.5 -> "2.30")
+    public static String formatHorasAsHDotMM(double horasDecimal) {
+        int horas = (int) Math.floor(horasDecimal);
+        int minutos = (int) Math.round((horasDecimal - horas) * 60.0);
+        if (minutos == 60) {
+            horas += 1;
+            minutos = 0;
+        }
+        return String.format("%d.%02d", horas, minutos);
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
@@ -215,9 +277,10 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
             log.error("Data fim ({}) é anterior à data início ({})", dataFim, dataInicio);
             throw new RuntimeException("Data fim não pode ser anterior à data início");
         }
-
         Duration duration = Duration.between(dataInicio, dataFim);
-        double horas = duration.toHours()+duration.toMinutes()%60;
+        long horasInteiras = duration.toHours();
+        long minutos = duration.toMinutes() % 60;
+        double horas = horasInteiras + (minutos / 60.0);
 
         if (horas > 24) {
             log.warn("Horas calculadas excedem 24 horas: {} horas", horas);

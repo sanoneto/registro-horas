@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,4 +23,9 @@ public interface RegistroHorasRepository extends JpaRepository<RegisterHoras, Lo
 
     Optional<RegisterHoras> findByPublicId(UUID attr0);
 
+    // Busca registros entre duas datas (todos os utilizadores)
+    List<RegisterHoras> findByDataInicioBetween(LocalDateTime start, LocalDateTime end);
+
+    // Busca registros de um utilizador entre duas datas
+    List<RegisterHoras> findByEstagiarioAndDataInicioBetween(String estagiario, LocalDateTime start, LocalDateTime end);
 }

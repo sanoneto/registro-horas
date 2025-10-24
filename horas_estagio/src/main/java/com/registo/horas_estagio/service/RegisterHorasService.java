@@ -27,5 +27,8 @@ public interface RegisterHorasService {
     RegisterResponse updateRegister(UUID publicId, RegisterRequest request);
 
     Map<Integer, Double> getWeeklyHoursForYear(int year, String estagiario);
+
+    // Retorna total de horas registadas por um estagiário (todos os registos)
+    double getTotalHoursForUser(String estagiario);
 }
 

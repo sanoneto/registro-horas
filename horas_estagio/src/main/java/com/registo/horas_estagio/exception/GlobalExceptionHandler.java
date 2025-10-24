@@ -101,4 +101,6 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
+
+
 }

@@ -209,6 +209,21 @@ public class RegisterHorasServiceImpl implements RegisterHorasService {
 
         return result;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public double getTotalHoursForUser(String estagiario) {
+        if (estagiario == null || estagiario.isBlank()) {
+            // Se não for fornecido estagiário, devolve 0 (poderia também lançar erro)
+            return 0.0;
+        }
+        String normalized = estagiario.toLowerCase().trim();
+        List<RegisterHoras> registros = registroHorasRepository.findByEstagiario(normalized);
+        return registros.stream()
+                .mapToDouble(RegisterHoras::getHorasTrabalhadas)
+                .sum();
+    }
+
     // Utilitário para formatar decimal para "H.mm" (ex.: 2.5 -> "2.30")
     public static String formatHorasAsHDotMM(double horasDecimal) {
         int horas = (int) Math.floor(horasDecimal);

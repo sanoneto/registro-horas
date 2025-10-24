@@ -189,6 +189,19 @@ public class RegistroHorasController {
      * <p>
      * Exemplo: GET /api/registos/weekly-hours?year=2025&user=joao
      */
+    @Operation(
+            summary = "Retorna as horas por semana para o ano informado",
+            description = "Cria um novo registro de horas de estágio"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Retorna as horas por semana para o ano informado",
+                    content = @Content(schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
     @GetMapping("/weekly-hours")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ESTAGIARIO')")
     public ResponseEntity<List<Map<String, Object>>> getWeeklyHours(
@@ -210,4 +223,38 @@ public class RegistroHorasController {
 
         return ResponseEntity.ok(body);
     }
+
+    /**
+     * +     * Retorna o total de horas registadas por um estagiário.
+     * +     * Exemplo: GET /api/registos/total-hours?user=joao
+     * +
+     */
+    @Operation(
+            summary = "Retorna o total de horas registadas por um estagiário",
+            description = "Retorna o total de horas registadas por um estagiário"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Retorna o total de horas registadas por um estagiário",
+                    content = @Content(schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+    @GetMapping("/total-hours")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('ESTAGIARIO') and #user == authentication.name)")
+    public ResponseEntity<Map<String, Object>> getTotalHoursForUser(
+            @RequestParam(name = "user") String user) {
+        double total = registerHorasService.getTotalHoursForUser(user);
+        String formatted = RegisterHorasServiceImpl.formatHorasAsHDotMM(total);
+
+        Map<String, Object> body = Map.of(
+                "user", user,
+                "totalHoursDecimal", total,
+                "totalHoursFormatted", formatted
+        );
+        return ResponseEntity.ok(body);
+    }
+
 }

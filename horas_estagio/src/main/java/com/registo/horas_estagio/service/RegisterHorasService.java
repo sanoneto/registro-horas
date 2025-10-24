@@ -6,6 +6,7 @@ import com.registo.horas_estagio.dto.response.RegisterResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface RegisterHorasService {
@@ -24,5 +25,7 @@ public interface RegisterHorasService {
     void DeleteRegisteredHoursUser(UUID publicId);
 
     RegisterResponse updateRegister(UUID publicId, RegisterRequest request);
+
+    Map<Integer, Double> getWeeklyHoursForYear(int year, String estagiario);
 }
 

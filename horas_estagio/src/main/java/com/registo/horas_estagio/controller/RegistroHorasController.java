@@ -5,6 +5,7 @@ import com.registo.horas_estagio.dto.request.RegisterRequest;
 import com.registo.horas_estagio.dto.response.PageResponse;
 import com.registo.horas_estagio.dto.response.RegisterResponse;
 import com.registo.horas_estagio.service.RegisterHorasService;
+import com.registo.horas_estagio.service.impl.RegisterHorasServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,8 +22,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/registos")
@@ -137,9 +141,10 @@ public class RegistroHorasController {
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('ESTAGIARIO') and #registerRequest.estagiario() == authentication.name)")
     public ResponseEntity<RegisterResponse> addRegisterHoras(@RequestBody @Valid RegisterRequest registerRequest) {
-       RegisterResponse registerResponse= registerHorasService.submitHours(registerRequest);
+        RegisterResponse registerResponse = registerHorasService.submitHours(registerRequest);
         return new ResponseEntity<>(registerResponse, HttpStatus.CREATED);
     }
+
     @Operation(
             summary = "Atualizar registo",
             description = "Atualiza um registro existente (ADMIN pode editar qualquer, ESTAGIARIO apenas os seus)"
@@ -159,6 +164,7 @@ public class RegistroHorasController {
         RegisterResponse response = registerHorasService.updateRegister(uuid, registerRequest);
         return ResponseEntity.ok(response);
     }
+
     @Operation(
             summary = "Apgagar registro",
             description = "Remove um registro de horas (apenas ADMIN)"
@@ -173,5 +179,35 @@ public class RegistroHorasController {
     public ResponseEntity<Void> deleteRegister(@PathVariable UUID publicId) {
         registerHorasService.DeleteRegisteredHoursUser(publicId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Retorna as horas por semana para o ano informado.
+     * Parâmetros:
+     * - year (obrigatório)
+     * - user (opcional) -> se informado filtra por estagiário
+     * <p>
+     * Exemplo: GET /api/registos/weekly-hours?year=2025&user=joao
+     */
+    @GetMapping("/weekly-hours")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ESTAGIARIO')")
+    public ResponseEntity<List<Map<String, Object>>> getWeeklyHours(
+            @RequestParam int year,
+            @RequestParam(required = false, name = "user") String user) {
+
+        Map<Integer, Double> weekly = registerHorasService.getWeeklyHoursForYear(year, user);
+
+        List<Map<String, Object>> body = weekly.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("week", e.getKey());
+                    m.put("totalHoursDecimal", e.getValue());
+                    m.put("totalHoursFormatted", RegisterHorasServiceImpl.formatHorasAsHDotMM(e.getValue()));
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(body);
     }
 }

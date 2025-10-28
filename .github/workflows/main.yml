@@ -35,7 +35,8 @@ jobs:
         run: chmod +x ${{ env.PROJECT_DIR }}/mvnw
 
       - name: Build, test, and package with Maven
-        run: ${{ env.PROJECT_DIR }}/mvnw -B clean package
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw -B clean package
         
       - name: Upload artifact
         uses: actions/upload-artifact@v4

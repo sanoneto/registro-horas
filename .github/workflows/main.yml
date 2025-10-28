@@ -121,6 +121,10 @@ jobs:
             -e SPRING_DATASOURCE_USERNAME=postgres \
             -e SPRING_DATASOURCE_PASSWORD=admin \
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            
+      - name: Run docker compose
+        run: |
+          docker compose -f  ${{ env.PROJECT_DIR }}/docker-compose.yml up -d 
 
       - name: Wait for application to be ready (optional)
         run: |

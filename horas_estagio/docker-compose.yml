@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: horas_app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: "vault-dev"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/horasdb"
+      SPRING_DATASOURCE_USERNAME: "horas_user"
+      SPRING_DATASOURCE_PASSWORD: "horas_pass"
+      VAULT_ADDR: "http://127.0.0.1:8200"
+      VAULT_TOKEN: ""
+      # Define onde o logback irá escrever
+      LOG_PATH: "/var/log/horas_app"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/var/log/horas_app

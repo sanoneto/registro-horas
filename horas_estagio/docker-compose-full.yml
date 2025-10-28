@@ -1,0 +1,21 @@
+# docker-compose.yml
+services:
+  vault:
+    image: hashicorp/vault:1.14.3
+    container_name: horas_vault
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    environment:
+      # endereço público que o Vault anunciará (usado por peers/clients)
+      VAULT_API_ADDR: "http://127.0.0.1:8200"
+      # variável interna do container
+      VAULT_ADDR: "http://127.0.0.1:8200"
+    volumes:
+      - ./vault/config:/vault/config
+      - vault_data:/vault/file
+    ports:
+      - "8200:8200"
+    command: "server -config=/vault/config/local.hcl"
+volumes:
+  vault_data:

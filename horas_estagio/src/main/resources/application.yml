@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: admin
+    url: jdbc:postgresql://localhost:5432/horasdb
+    username: horas_user
+    password: horas_pass
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -19,6 +19,7 @@ spring:
       port: 8200
       scheme: http
       enabled: false
+
 # Configuração do Flyway (migrations em src/main/resources/db/migration)
   flyway:
     enabled: true
@@ -59,3 +60,5 @@ logging:
     org.springframework.security: DEBUG
     com.registo.horas_estagio: DEBUG
     org.flywaydb: DEBUG
+  file:
+    name: logs/app.log

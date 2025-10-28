@@ -168,6 +168,13 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Adicionar dependência do logstash-logback-encoder para suportar LogstashEncoder -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+
 
     </dependencies>
 
@@ -217,7 +224,6 @@
                     <!-- Para relatório mais detalhado -->
                     <trimStackTrace>false</trimStackTrace>
                     <!-- Ajuste o caminho para o jar no seu repositório local -->
-                    <argLine>-javaagent:${user.home}/.m2/repository/net/bytebuddy/byte-buddy-agent/1.17.7/byte-buddy-agent-1.17.7.jar</argLine>
                 </configuration>
             </plugin>
 			<plugin>

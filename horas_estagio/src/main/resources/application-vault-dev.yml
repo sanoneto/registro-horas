@@ -4,7 +4,7 @@ spring:
     vault:
       host: ${VAULT_HOST:127.0.0.1}
       port: ${VAULT_PORT:8200}
-      scheme: ${VAULT_SCHEME:http}
+      scheme: ${VAULT_SCHEME:VAULT_SCHEME}
       authentication: TOKEN
       token: ${VAULT_TOKEN:}
       kv:

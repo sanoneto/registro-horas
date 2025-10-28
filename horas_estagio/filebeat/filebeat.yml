@@ -1,0 +1,22 @@
+# language: yaml
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/horas_app/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: message
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+processors:
+  - add_host_metadata: {}
+  - add_cloud_metadata: {}
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+setup.kibana:
+  host: "http://kibana:5601"
